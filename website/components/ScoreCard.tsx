@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Box, Text, useMantineTheme } from '@mantine/core';
-import { Team } from '../types';
+import { Team } from '../lib/types';
 
 interface ScoreCardProps extends Team {
   index: number;

@@ -1,7 +1,8 @@
 import { Container } from '@mantine/core';
 import { useState } from 'react';
-import { Team } from '../types';
+import { Team } from '../lib/types';
 import ScoreCard from './ScoreCard';
+import { socket } from '../lib/socket';
 
 const defaultTeam: Team[] = [
   {
@@ -33,7 +34,10 @@ const defaultTeam: Team[] = [
 
 const Scoreboard = () => {
   const [teams, setTeams] = useState(defaultTeam);
-
+  socket.onmessage = (event) => {
+    console.log(`[message] browser received ${event.data}`)
+    setTeams(JSON.parse(event.data));
+  }
   return (
     <Container size="xl">
       {teams
