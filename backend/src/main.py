@@ -1,79 +1,8 @@
-from fastapi import FastAPI
-from typing import Optional
-import mysql.connector
+import json
+from helpers.models import *
+from helpers.database import Database
+from fastapi import FastAPI, status, HTTPException
 
-class Database():
-    def __init__(self):
-        try:
-            self.database = mysql.connector.connect(
-                host="db",
-                user="root",
-                password="admin",
-                port="3306",
-                database="scoreboard"
-            )
-        except err:
-            print(f"An error occured connecting to db... trying again")
-            return
-
-        database_cursor = self.database.cursor()
-
-        init_commands = [
-            """CREATE TABLE IF NOT EXISTS `Teams` (
-                `id` int PRIMARY KEY AUTO_INCREMENT,
-                `teamName` varchar(20),
-                `password` varchar(20),
-                `points` int,
-                `wins` int,
-                `admin` boolean
-            );""",
-
-            """
-            CREATE TABLE IF NOT EXISTS `Tasks` (
-                `id` int PRIMARY KEY AUTO_INCREMENT,
-                `taskName` varchar(20),
-                `points` int,
-                `key` varchar(20),
-                `hint` varchar(100)
-            );""",
-
-            """
-            CREATE TABLE IF NOT EXISTS `TasksCompleted` (
-                `taskID` int PRIMARY KEY,
-                `tournamentTeamID` int
-            );""",
-            
-            """CREATE TABLE IF NOT EXISTS `TournamentTeams` (
-                `id` int AUTO_INCREMENT,
-                `teamID` int,
-                `tournamentID` int,
-                PRIMARY KEY (`id`, `teamID`)
-            );""",
-
-            """CREATE TABLE IF NOT EXISTS `Tournaments` (
-            `id` int PRIMARY KEY AUTO_INCREMENT,
-            `name` varchar(20),
-            `endTime` varchar(20)
-            );""",
-
-            """CREATE TABLE IF NOT EXISTS `Cookies` (
-            `id` varchar(24),
-            `teamID` int PRIMARY KEY
-            );""",
-
-            "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`id`);",
-
-            "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`tournamentTeamID`) REFERENCES `TournamentTeams` (`id`);",
-
-            "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);",
-
-            "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`tournamentID`) REFERENCES `Tournaments` (`id`);",
-
-            "ALTER TABLE `Cookies` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);"
-        ]
-
-        for command in init_commands:
-            database_cursor.execute(command)
 
 db = Database()
 app = FastAPI()
@@ -83,63 +12,125 @@ app = FastAPI()
 
 @app.get("/teams/{tournament_id}")
 #returns a list of Teams
-def handle_scoreboard():
-    # returns 200: [{
-    #   id: string
-    #   teamName: string
-    #   points: string
-    # }]
-    pass
+async def handle_scoreboard(tournament_id: str):
+    try:
+        cursor = db.database.cursor()
+        result = cursor.execute(f"SELECT Teams.id, Teams.teamName, Teams.points FROM Teams,TournamentTeams WHERE TournamentTeams.tournamentID = {tournament_id} AND TournamentTeams.teamID = Teams.id;")
+        db.database.commit()
+        return result
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
+
 
 @app.get("/tasks/{tournament_id}/{team_id}")
-def handle_tasks():
-    # returns 200: [{
-    #   id: ""
-    #   taskName: ""
-    #   points: ""
-    # }]
-    pass
+async def handle_tasks(tournament_id: str, team_id: str):
+    try:
+        cursor = db.database.cursor()
+        result = cursor.execute(f"SELECT Tasks.id, Tasks.taskName, Tasks.points FROM Tasks,TournamentTeams,TasksCompleted WHERE TournamentTeams.tournamentID = {tournament_id} AND TournamentTeams.teamID = {team_id} AND TournamentTeams.id = TasksCompleted.tournamentTeamID AND TasksCompleted.taskID = Tasks.id;")
+        db.database.commit()
+        return result
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=err
+        )
+
 
 @app.post("/tasks/{tournament_id}/{team_id}")
-def handle_post_task():
-    # {
-    #   id: ""
-    #   key: ""
-    # }
+async def handle_post_task(tournament_id: str, team_id: str, request: PostTasksRequest):
     # return 200
     # return 403 (task key doesn't match)
-    pass
+    cursor = db.database.cursor()
+    cursor.execute(f"SELECT Tasks.key FROM Tasks WHERE id = {request.task_id};")
+    row = cursor.fetchone()
+    db.database.commit()
+    if row[0] == key:
+        cursor.execute(f"SELECT tournamentTeamID FROM TournamentTeams WHERE teamID = {team_id} AND tournamentID = {tournament_id};")
+        row = cursor.fetchone()
+        db.database.commit()
+        tournamentTeam = row[0]
+        if tournamentTeam != None:
+            cursor = db.database.cursor()
+            result = cursor.execute(f"INSERT INTO TasksCompleted (taskID,tournamentTeamID) Values ({request.task_id},{request.tournamentTeam};")
+            db.database.commit()
+            return json.dumps(result)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Could not find team in tournament"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect task key provided"
+        )
+    
 
-@app.get("/hints/{tournament_id}/{team_id}/{task_id}")
-def handle_hint():
+@app.get("/hints/{task_id}")
+async def handle_hint(task_id: str, request: GetHintRequest):
     # validate that they have points (if they dont return 403)
     # remove points
     # return 200 {hint: ""}
-    pass
+    cursor = db.database.cursor()
+    result = cursor.execute(f"SELECT points FROM Teams WHERE Teams.id = {request.team_id};")
+    row = cursor.fetchone()
+    db.database.commit()
+    teamPoints=row[0]
+    if teamPoints>=200:
+        teamPoints = teamPoints - 200
+        cursor1 = db.database.cursor()
+        result = cursor1.execute(f"UPDATE Teams SET points = {teamPoints} WHERE Teams.id = {request.team_id};")
+        row = cursor1.fetchone()
+        db.database.commit()
+        cursor1 = db.database.cursor()
+        result = cursor1.execute(f"SELECT hint FROM Tasks WHERE Tasks.id = {task_id};")
+        db.database.commit()
+        return json.dumps(result)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="This team does not have enough points to get this hint."
+        )
+
 
 @app.get("/tournaments")
-def handle_tournaments():
-    # list all current tournaments
-    # [{
-    #   id: ""
-    #   name: ""
-    # }]
-    pass
+async def handle_tournaments():
+    try: 
+        cursor = db.database.cursor()
+        result = await cursor.execute(f"SELECT * FROM Tournaments;")
+        db.database.commit()
+        return json.dumps(result)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
+    
 
 #return end time and team scores for tournament
 @app.get("/tournament/{tournament_id}")
-def handle_tournament():
+async def handle_tournament(tournament_id: str):
     #returns 200 {
     # name: "",
     # endTime: "",
     #}
-    cursor = db.database.cursor()
-    result = cursor.execute(f"SELECT * FROM Tournaments WHERE id = {tournament_id};")
-    db.database.commit()
-    return result
+    try:
+        cursor = db.database.cursor()
+        result = cursor.execute(f"SELECT * FROM Tournaments WHERE id = {tournament_id};")
+        db.database.commit()
+        return json.dumps(result)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
+    
 
 @app.post("/tournament")
-def handle_post_tournament():
+async def handle_post_tournament(request: PostTournamentRequest):
     # {
     #   name: ""
     #   endTime: ""
@@ -147,27 +138,51 @@ def handle_post_tournament():
     # return { tournament_id }
     try:
         cursor = db.database.cursor()
-        result = cursor.execute("INSERT INTO Tournaments (name, endTime) VALUES ('ooga', 'boonga');")
+        result = cursor.execute(f"INSERT INTO Tournaments (name, endTime) VALUES ({request.name}, {request.endTime});")
         db.database.commit()
-        return f"Successfully added tournament"
-    except Exception as e:
-        return f"Internal Server Error: {e}"
+        return json.dumps(result)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
+
 
 @app.patch("/tournament/{tournament_id}")
-def handle_patch_tournament():
+async def handle_patch_tournament(tournament_id: str, request: PatchTournamentRequest):
     # Add teams to tournament via the teamId
     # {
     #   id: ""
     # }
-    pass
+    try:
+        cursor = db.database.cursor()
+        result = cursor.execute(f"INSERT INTO TournamentTeams (teamID, tournamentID) VALUES ({request.team_id}, {tournament_id});")
+        db.database.commit()
+        return json.dumps(result)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
+
 
 @app.delete("/tournament/{tournament_id}")
-def handle_delete_tournament():
+async def handle_delete_tournament(tournament_id: str):
     # delete tournament
-    pass
+    try:
+        cursor = db.database.cursor()
+        cursor.execute(f"DELETE from Tournaments WHERE id = {tournament_id});")
+        db.database.commit()
+        return f"Successfully deleted tournament"
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
+
 
 @app.post("/register/")
-def handle_register():
+async def handle_register():
     #{
     #   teamName: ""
     #   password: "" 
@@ -180,8 +195,9 @@ def handle_register():
     # Header { Set-Cookie: teamName=base64encodedcookie }
     pass
 
+
 @app.post("/login/")
-def handle_login():
+async def handle_login():
     # Handle login, will be provided a JSON document with:
     # {
     #   teamName: "name of team"
