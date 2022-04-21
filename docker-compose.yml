@@ -7,16 +7,16 @@ services:
     networks:
       - backend
     volumes:
-      - db_data:${DATABASE_LOCATION}/database
+      - db_data:$HOME/ZEIT3118_db/
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=admin
       - MYSQL_DATABASE=scoreboard
       - MYSQL_ROOT_HOST=%
-      
+
   api:
     build: ./backend/
-    ports: 
+    ports:
       - "3001:3001"
     restart: on-failure:10
     networks:
@@ -27,12 +27,12 @@ services:
 
 # DATABASE_LOCATION=/c/Users/seanh/Documents/ZEIT3118/database
 
-  # website:
-  #   build: ./website/
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - frontend
+# website:
+#   build: ./website/
+#   ports:
+#     - "8080:8080"
+#   networks:
+#     - frontend
 
 volumes:
   db_data: {}
