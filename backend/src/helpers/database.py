@@ -1,74 +1,91 @@
+from typing import List, Tuple
 import mysql.connector
+from helpers.sql import init_commands
 
 class Database():
     def __init__(self):
-        try:
-            self.database = mysql.connector.connect(
-                host="db",
-                user="root",
-                password="admin",
-                port="3306",
-                database="scoreboard"
-            )
-        except Exception as err:
-            print(f"An error occured connecting to db... trying again")
-            return
-
-        database_cursor = self.database.cursor()
-
-        init_commands = [
-            """CREATE TABLE IF NOT EXISTS `Teams` (
-                `id` int PRIMARY KEY AUTO_INCREMENT,
-                `teamName` varchar(20),
-                `password` varchar(20),
-                `points` int,
-                `wins` int,
-                `admin` boolean
-            );""",
-
-            """
-            CREATE TABLE IF NOT EXISTS `Tasks` (
-                `id` int PRIMARY KEY AUTO_INCREMENT,
-                `taskName` varchar(20),
-                `points` int,
-                `key` varchar(20),
-                `hint` varchar(100)
-            );""",
-
-            """
-            CREATE TABLE IF NOT EXISTS `TasksCompleted` (
-                `taskID` int PRIMARY KEY,
-                `tournamentTeamID` int
-            );""",
-            
-            """CREATE TABLE IF NOT EXISTS `TournamentTeams` (
-                `id` int AUTO_INCREMENT,
-                `teamID` int,
-                `tournamentID` int,
-                PRIMARY KEY (`id`, `teamID`)
-            );""",
-
-            """CREATE TABLE IF NOT EXISTS `Tournaments` (
-            `id` int PRIMARY KEY AUTO_INCREMENT,
-            `name` varchar(20),
-            `endTime` varchar(20)
-            );""",
-
-            """CREATE TABLE IF NOT EXISTS `Cookies` (
-            `id` varchar(24),
-            `teamID` int PRIMARY KEY
-            );""",
-
-            "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`id`);",
-
-            "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`tournamentTeamID`) REFERENCES `TournamentTeams` (`id`);",
-
-            "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);",
-
-            "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`tournamentID`) REFERENCES `Tournaments` (`id`);",
-
-            "ALTER TABLE `Cookies` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);"
-        ]
-
+        print("Attempting to connect to database...")
+        self.database = mysql.connector.connect(
+            host='db',
+            port=3306,
+            user="root",
+            password="admin",
+            database="scoreboard"
+        )
+        print("Database connected!")
+ 
         for command in init_commands:
-            database_cursor.execute(command)
+            self.database.reconnect()
+            cursor = self.database.cursor()
+            cursor.execute(command)
+            cursor.close()
+
+
+    def __validate_query_against_type(query: str, type: str) -> None:
+        if query.strip()[:len(type)].upper() != type.upper():
+            raise ValueError(f"Query provided is not a valid {type} query")
+
+    def select(self, query: str, *args) -> Tuple:
+        Database.__validate_query_against_type(query, 'select')
+        cursor = self.database.cursor() 
+        try:
+            cursor.execute(query, args)
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as err:
+            cursor.close()  
+            raise err
+
+    def selectall(self, query: str, *args) -> List[Tuple]:
+        Database.__validate_query_against_type(query, 'select')
+        cursor = self.database.cursor()
+        try:
+            cursor.execute(query, args)
+            result = cursor.fetchall()
+            cursor.close()
+            return result
+        except Exception as err:
+            if cursor is not None:
+                cursor.close()  
+            raise err
+
+    def delete(self, query: str, *args) -> None:
+        Database.__validate_query_against_type(query, 'delete')
+        cursor = self.database.cursor()
+        try:
+            cursor.execute(query, args)
+            self.database.commit()
+            cursor.close()
+        except Exception as err:
+            if cursor is not None:
+                cursor.close()  
+            raise err
+
+    def insert(self, query: str, *args) -> str:
+        Database.__validate_query_against_type(query, 'insert')
+        cursor = self.database.cursor()
+        try:    
+            cursor.execute(query, args)
+            self.database.commit()
+            id = cursor.lastrowid
+            cursor.close()
+            return id
+        except Exception as err:
+            if cursor is not None:
+                cursor.close()  
+            raise err
+
+    def update(self, query: str, *args) -> str:
+        Database.__validate_query_against_type(query, 'update')
+        cursor = self.database.cursor()
+        try:            
+            cursor.execute(query, args)
+            self.database.commit()
+            id = cursor.lastrowid
+            cursor.close()
+            return id
+        except Exception as err:
+            if cursor is not None:
+                cursor.close()  
+            raise err

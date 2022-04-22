@@ -1,12 +1,10 @@
 from pydantic import BaseModel
 
 
-
-
-
 class PostTasksRequest(BaseModel):
     task_id: str
     tournamentTeam: str
+    key: str
 
 
 class GetHintRequest(BaseModel):
@@ -18,4 +16,13 @@ class PostTournamentRequest(BaseModel):
     endTime: str
 
 class PatchTournamentRequest(BaseModel):
-    team_id: str
+    teamName: str
+
+class LoginRequest(BaseModel):
+    teamName: str
+    password: str
+
+class RegisterRequest(BaseModel):
+    teamName: str
+    avatar: int
+    password: str

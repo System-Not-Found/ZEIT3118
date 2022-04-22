@@ -1,30 +1,29 @@
-import { useState } from 'react';
-import Scoreboard from '../components/Scoreboard/Scoreboard'
-import { Container, Center, Box, Drawer, Text } from '@mantine/core';
-import Timer from '../components/Scoreboard/Timer';
-import { FiSettings } from 'react-icons/fi'
-import type { NextPage } from 'next'
-import SettingsDrawer from '../components/Settings/SettingsDrawer';
+import { useState } from "react";
+import { Container } from "@mantine/core";
+import { FiSettings } from "react-icons/fi";
+import type { NextPage } from "next";
+import { Tournament } from "../lib/types";
+import ScoreScreen from "../components/ScoreScreen";
+import TournamentScreen from "../components/TournamentScreen";
 
 const Home: NextPage = () => {
   const [open, setOpen] = useState(false);
+  const [tournament, setTournament] = useState<Tournament>();
 
   return (
     <Container size="lg">
-      <Box>
-        <FiSettings 
-          size="25px" 
-          style={{ cursor: "pointer", float: 'right' }}
-          onClick={() => setOpen(true)}
-        />
-        <Center>
-          <Timer year={2022} month={2} day={19} hour={19} minute={20} second={100}/>
-        </Center>
-      </Box>
-      <SettingsDrawer position="right" size="xl" opened={open} onClose={() => setOpen(false)}/>
-      <Scoreboard/>
+      <FiSettings
+        size="25px"
+        style={{ cursor: "pointer", float: "right" }}
+        onClick={() => setOpen(true)}
+      />
+      {tournament ? (
+        <ScoreScreen />
+      ) : (
+        <TournamentScreen setTournament={setTournament} />
+      )}
     </Container>
-  )
-}
+  );
+};
 
 export default Home;
