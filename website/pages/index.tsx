@@ -1,19 +1,28 @@
+import { useState } from "react";
+import { Container } from "@mantine/core";
+import { FiSettings } from "react-icons/fi";
 import type { NextPage } from "next";
-import Head from "next/head";
-import Image from "next/image";
-import Scoreboard from "../components/Scoreboard";
-import styles from "../styles/Home.module.css";
+import { Tournament } from "../lib/types";
+import ScoreScreen from "../components/ScoreScreen";
+import TournamentScreen from "../components/TournamentScreen";
 
 const Home: NextPage = () => {
+  const [open, setOpen] = useState(false);
+  const [tournament, setTournament] = useState<Tournament>();
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Cyber Scoreboard</title>
-        <meta name="description" content="Scoreboard for Cyber Module" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <Scoreboard />
-    </div>
+    <Container size="lg">
+      <FiSettings
+        size="25px"
+        style={{ cursor: "pointer", float: "right" }}
+        onClick={() => setOpen(true)}
+      />
+      {tournament ? (
+        <ScoreScreen />
+      ) : (
+        <TournamentScreen setTournament={setTournament} />
+      )}
+    </Container>
   );
 };
 
