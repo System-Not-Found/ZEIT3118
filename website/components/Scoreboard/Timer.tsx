@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import { Card, Text } from '@mantine/core';
+import { Card, Text } from "@mantine/core";
 
 interface TimerProps {
   year: number;
@@ -7,39 +7,31 @@ interface TimerProps {
   day: number;
   hour: number;
   minute: number;
-  second: number;
 }
 
 interface TimeLeft {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
 }
 
-const Timer: FC<TimerProps> = ({
-  year,
-  month,
-  day,
-  hour,
-  minute,
-  second,
-}) => {
-  const calculateTimeLeft = (): TimeLeft => {  
-    const difference = +new Date(year, month, day, hour, minute, second) - +new Date();
-  
-    let timeLeft: TimeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+const Timer: FC<TimerProps> = ({ year, month, day, hour, minute }) => {
+  const calculateTimeLeft = (): TimeLeft => {
+    const difference = +new Date(year, month, day, hour, minute) - +new Date();
+
+    let timeLeft: TimeLeft = { day: 0, hour: 0, minute: 0, second: 0 };
     if (difference > 0) {
       timeLeft = {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60)
+        day: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hour: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minute: Math.floor((difference / 1000 / 60) % 60),
+        second: Math.floor((difference / 1000) % 60),
       };
     }
-  
+
     return timeLeft;
-  }
+  };
 
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
@@ -53,10 +45,10 @@ const Timer: FC<TimerProps> = ({
   return (
     <Card>
       <Text size="xl" weight="bold">
-        {timeLeft.days}D {timeLeft.hours}H {timeLeft.minutes}M {timeLeft.seconds}S
+        {timeLeft.day}D {timeLeft.hour}H {timeLeft.minute}M {timeLeft.second}S
       </Text>
     </Card>
-  )
-}
+  );
+};
 
 export default Timer;

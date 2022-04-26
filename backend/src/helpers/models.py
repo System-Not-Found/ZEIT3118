@@ -1,10 +1,16 @@
 from pydantic import BaseModel
 
 
-class PostTasksRequest(BaseModel):
+class PostTaskRequest(BaseModel):
     task_id: str
-    tournamentTeam: str
     key: str
+
+
+class PostTasksRequest(BaseModel):
+    taskName: str
+    points: int
+    key: str
+    hint: str
 
 
 class GetHintRequest(BaseModel):

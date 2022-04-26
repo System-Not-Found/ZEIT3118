@@ -21,7 +21,7 @@ init_commands = [
         `taskName` VARCHAR(20),
         `points` INT,
         `key` VARCHAR(20),
-        `hint` VARCHAR(100)
+        `hint` VARCHAR(300)
     );""",
 
     """
@@ -44,8 +44,8 @@ init_commands = [
     );""",
 
     """CREATE TABLE IF NOT EXISTS `Cookies` (
-    `id` VARCHAR(24),
-    `teamID` INT PRIMARY KEY
+    `cookie` VARCHAR(16) PRIMARY KEY,
+    `teamID` INT
     );""",
 
     "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`id`);",

@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Card,
   TextInput,
@@ -9,20 +9,47 @@ import {
   Grid,
   Button,
 } from "@mantine/core";
-import { FiUsers as TeamIcon, FiLock as LockIcon } from "react-icons/fi";
+import { Users, Lock } from "tabler-icons-react";
+import { hash_password, isNotFound, isUnauthorized } from "../lib/utils";
+import { UserContext } from "./_app";
+import { showNotification } from "@mantine/notifications";
 
 interface LoginData {
   teamName: string;
   password: string;
 }
 
-const handleAuthentication = (loginData: LoginData) => {};
-
 const LoginPage: NextPage = () => {
   const [loginData, setLoginData] = useState<LoginData>({
     teamName: "",
     password: "",
   });
+  const context = useContext(UserContext);
+
+  const handleAuthenticate = async (loginData: LoginData) => {
+    const password = hash_password(loginData.password);
+    const response = await fetch("http://localhost:3001/login", {
+      body: JSON.stringify({ ...loginData, password }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    if (response.ok) {
+      showNotification({
+        message: "Successfully logged in",
+        color: "green",
+      });
+      const user = await response.json();
+      context.toggleUser(user);
+      window.location.replace("/");
+    } else if (isUnauthorized(response.status) || isNotFound(response.status)) {
+      showNotification({
+        message: "Invalid username and password combination",
+        color: "red",
+      });
+    }
+  };
 
   return (
     <Container size="xs">
@@ -39,7 +66,7 @@ const LoginPage: NextPage = () => {
               onChange={(evt) =>
                 setLoginData({ ...loginData, teamName: evt.target.value })
               }
-              icon={<TeamIcon />}
+              icon={<Users />}
               radius="md"
               required={true}
             />
@@ -52,15 +79,13 @@ const LoginPage: NextPage = () => {
               onChange={(evt) =>
                 setLoginData({ ...loginData, password: evt.target.value })
               }
-              icon={<LockIcon />}
+              icon={<Lock />}
               radius="md"
               required={true}
             />
           </Grid.Col>
           <Grid.Col span={10}>
-            <Button onClick={() => handleAuthentication(loginData)}>
-              Login
-            </Button>
+            <Button onClick={() => handleAuthenticate(loginData)}>Login</Button>
           </Grid.Col>
         </Grid>
       </Card>

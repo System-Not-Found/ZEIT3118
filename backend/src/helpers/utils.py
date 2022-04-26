@@ -4,9 +4,9 @@ import hashlib
 from typing import Dict, List
 
 
-def generate_salt(salt_size=16) -> str:
+def generate_random_string(size=16) -> str:
     ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return ''.join(random.choice(ALPHABET) for _ in range(salt_size))
+    return ''.join(random.choice(ALPHABET) for _ in range(size))
 
 
 def combine_hash(salt: str, password: str) -> str:

@@ -1,8 +1,13 @@
 export interface Team {
   id: number;
   teamName: string;
+  avatar: number;
   points: number;
   wins: number;
+}
+
+export interface User extends Team {
+  admin: boolean;
 }
 
 export interface Auth {
