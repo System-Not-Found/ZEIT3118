@@ -3,13 +3,28 @@ import Link from "next/link";
 import { NextLink } from "@mantine/next";
 import { FC } from "react";
 import { Settings, Logout } from "tabler-icons-react";
+import { API_ENDPOINT, AVATAR_NAMES } from "../../lib/constants";
+import { error, success } from "../../lib/utils";
 
 interface NavigationProps {
   avatar: number;
 }
 
 const Navigation: FC<NavigationProps> = ({ avatar }) => {
-  const handleLogout = () => {};
+  const handleLogout = async () => {
+    const response = await fetch(`${API_ENDPOINT}/logout`, {
+      credentials: "include",
+    });
+    if (response.ok) {
+      success("Successfully logged out");
+      window.location.replace("/login");
+    } else {
+      error("Unable to log out");
+    }
+  };
+
+  const loggedIn = avatar !== -1;
+
   return (
     <Container
       p="md"
@@ -26,24 +41,31 @@ const Navigation: FC<NavigationProps> = ({ avatar }) => {
           Cyber Modules
         </Text>
       </Link>
-      <Menu
-        trigger="hover"
-        control={
-          <Avatar
-            src={avatar === -1 ? null : `/avatars/${avatar}.png`}
-            radius="lg"
-            size="lg"
-            sx={{ ":hover": { cursor: "pointer" } }}
-          />
-        }
-      >
-        <Menu.Item component={NextLink} href="/settings" icon={<Settings />}>
-          Settings
-        </Menu.Item>
-        <Menu.Item onClick={() => handleLogout()} icon={<Logout />}>
-          Logout
-        </Menu.Item>
-      </Menu>
+      {loggedIn ? (
+        <Menu
+          trigger="hover"
+          control={
+            <Avatar
+              src={loggedIn ? `/avatars/${AVATAR_NAMES[avatar]}.png` : null}
+              radius="lg"
+              size="lg"
+              sx={{ ":hover": { cursor: "pointer" } }}
+            />
+          }
+        >
+          <Menu.Item component={NextLink} href="/settings" icon={<Settings />}>
+            Settings
+          </Menu.Item>
+          <Menu.Item onClick={() => handleLogout()} icon={<Logout />}>
+            Logout
+          </Menu.Item>
+        </Menu>
+      ) : (
+        <div>
+          <Link href="/login">Log in</Link>
+          <Link href="/signup">Sign up</Link>
+        </div>
+      )}
     </Container>
   );
 };

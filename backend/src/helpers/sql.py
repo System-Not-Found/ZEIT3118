@@ -20,7 +20,7 @@ init_commands = [
         `id` INT PRIMARY KEY AUTO_INCREMENT,
         `taskName` VARCHAR(20),
         `points` INT,
-        `key` VARCHAR(20),
+        `password` VARCHAR(64),
         `hint` VARCHAR(300)
     );""",
 

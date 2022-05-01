@@ -20,24 +20,29 @@ const Scoreboard: FC<ScoreboardProps> = () => {
 
   return (
     <Grid>
-      {teams
-        .sort((a, b) => b.points - a.points)
-        .map((team, idx) => (
-          <Grid.Col span={12}>
-            <Card
-              shadow="xs"
-              p="lg"
-              sx={(theme) => ({
-                backgroundColor: theme.colors.gray[0],
-              })}
-            >
-              <Text size="xl" color={getColor(idx)}>
-                {team.teamName}
-              </Text>
-              <Text size="lg">Score: {team.points}</Text>
-            </Card>
-          </Grid.Col>
-        ))}
+      <Grid.Col span={10}>
+        <Grid>
+          {teams
+            .sort((a, b) => b.points - a.points)
+            .map((team, idx) => (
+              <Grid.Col span={12}>
+                <Card
+                  shadow="xs"
+                  p="lg"
+                  sx={(theme) => ({
+                    backgroundColor: theme.colors.gray[0],
+                  })}
+                >
+                  <Text size="xl" color={getColor(idx)}>
+                    {team.teamName}
+                  </Text>
+                  <Text size="lg">Score: {team.points}</Text>
+                </Card>
+              </Grid.Col>
+            ))}
+        </Grid>
+      </Grid.Col>
+      <Grid.Col span={2}></Grid.Col>
     </Grid>
   );
 };

@@ -13,9 +13,9 @@ import { useState, useEffect, useContext } from "react";
 import PasswordStrength from "../components/Login/PasswordStrength";
 import { Users, Lock } from "tabler-icons-react";
 import { API_ENDPOINT, AVATAR_NAMES } from "../lib/constants";
-import { hash_password, isConflict } from "../lib/utils";
+import { error, hashPassword, isConflict, success } from "../lib/utils";
 import { UserContext } from "./_app";
-import { showNotification } from "@mantine/notifications";
+import cookie from "js-cookie";
 
 interface RegisterData {
   teamName: string;
@@ -32,6 +32,7 @@ const validTeamName = (teamName: string): boolean => {
 };
 
 const validRegisterData = (data: RegisterInfo): boolean => {
+  if (data.password === "") return false;
   if (data.password !== data.confirmPassword) return false;
   if (!validTeamName(data.teamName)) return false;
   return true;
@@ -60,9 +61,10 @@ const SignUp: NextPage = () => {
   }, []);
 
   const handleRegister = async (user: RegisterData): Promise<void> => {
-    const password = hash_password(user.password);
+    const password = hashPassword(user.password);
     const response = await fetch(`${API_ENDPOINT}/register`, {
       body: JSON.stringify({ ...user, password }),
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });
@@ -70,16 +72,10 @@ const SignUp: NextPage = () => {
     if (response.ok) {
       const user = await response.json();
       context.toggleUser(user);
-      showNotification({
-        message: "Successfully registered team!",
-        color: "green",
-      });
+      success("Successfully added team!");
       window.location.replace("/");
     } else if (isConflict(response.status)) {
-      showNotification({
-        message: "Team name already taken",
-        color: "red",
-      });
+      error("Team name already taken");
     }
   };
 

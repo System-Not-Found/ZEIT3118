@@ -4,6 +4,7 @@ import Navigation from "../components/shared/Navigation";
 import { User } from "../lib/types";
 import { isUnauthorized } from "../lib/utils";
 import { NotificationsProvider } from "@mantine/notifications";
+import { API_ENDPOINT } from "../lib/constants";
 
 interface UserContextProps {
   user: User;
@@ -32,16 +33,18 @@ function MyApp({ Component, pageProps, ...appProps }: AppProps) {
 
   useEffect(() => {
     async function validateSession(): Promise<void> {
-      const response = await fetch("/session");
-      if (response.ok) {
+      const response = await fetch(`${API_ENDPOINT}/session`, {
+        credentials: "include",
+      });
+      if (response.status === 200) {
         const user = await response.json();
         setUser(user);
-      } else if (isUnauthorized(response.status)) {
+      } else {
         setUser(emptyUser);
       }
     }
     validateSession();
-  });
+  }, []);
 
   return (
     <NotificationsProvider>

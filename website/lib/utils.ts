@@ -1,7 +1,37 @@
+import { showNotification } from "@mantine/notifications";
 import sjcl from "sjcl";
 import { API_ENDPOINT } from "./constants";
-import { Team, Tournament } from "./types";
+import { Task, Team, Tournament, KnownTask } from "./types";
 
+// Logging
+export const success = (message: string, silent = false): void => {
+  console.log(`SUCCESS: ${message}`);
+  if (!silent) {
+    showNotification({
+      message,
+      color: "green",
+    });
+  }
+};
+
+export const warn = (message: string, silent = false): void => {
+  console.log(`WARNING: ${message}`);
+  if (!silent) {
+    showNotification({
+      message,
+      color: "yellow",
+    });
+  }
+};
+export const error = (message: string, silent = false): void => {
+  console.log(`ERROR: ${message}`);
+  if (!silent) {
+    showNotification({
+      message,
+      color: "red",
+    });
+  }
+};
 // Status Codes
 export const isUnauthorized = (status: number) => {
   return status === 401;
@@ -13,6 +43,10 @@ export const isNotFound = (status: number) => {
 
 export const isConflict = (status: number) => {
   return status === 409;
+};
+
+export const isUnModified = (status: number) => {
+  return status == 304;
 };
 
 interface Time {
@@ -55,21 +89,33 @@ export const isInPast = (dateString: string): boolean => {
   );
 };
 
-export const hash_password = (password: string) => {
+export const hashPassword = (password: string) => {
   const bits = sjcl.hash.sha256.hash(password);
   return sjcl.codec.hex.fromBits(bits);
 };
 
-export const getTournamentData = async (id: string) => {
-  const tournamentResp = await fetch(`${API_ENDPOINT}/tournament/${id}`);
-  const tournament = (await tournamentResp.json()) as Tournament;
-
-  const teamsResp = await fetch(`${API_ENDPOINT}/teams/${id}`);
-  const teams = (await teamsResp.json()) as Team[];
+export const getTournamentPageData = async (id: string) => {
   return {
-    tournament,
-    teams,
+    tournament: await getTournamentData(id),
+    teams: await getTeamData(id),
+    tasks: await getTaskData(),
   };
+};
+
+const getTournamentData = async (id: string): Promise<Tournament> => {
+  const tournamentResp = await fetch(`${API_ENDPOINT}/tournament/${id}`);
+  return (await tournamentResp.json()) as Tournament;
+};
+
+const getTeamData = async (id: string): Promise<Team[]> => {
+  const teamsResp = await fetch(`${API_ENDPOINT}/teams/${id}`);
+  return (await teamsResp.json()) as Team[];
+};
+
+const getTaskData = async (): Promise<KnownTask[]> => {
+  const tasks = await fetch(`${API_ENDPOINT}/tasks`);
+  console.log(tasks);
+  return (await tasks.json()) as KnownTask[];
 };
 
 export const getAllTournamentIds = async () => {

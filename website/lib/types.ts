@@ -1,3 +1,5 @@
+import { Tallymarks } from "tabler-icons-react";
+
 export interface Team {
   id: number;
   teamName: string;
@@ -22,9 +24,12 @@ export interface Task {
   id: number;
   taskName: string;
   points: number;
-  key: string;
+  password: string;
   hint: string;
 }
+
+// Excludes all secret properties so they aren't being sent over the network
+export type KnownTask = Omit<Task, "key" | "hint">;
 
 export interface CompletedTask {
   taskID: number;

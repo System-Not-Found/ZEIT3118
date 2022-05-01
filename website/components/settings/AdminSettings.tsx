@@ -15,7 +15,16 @@ import { NextPage } from "next";
 import { useState, useEffect, FC } from "react";
 import { API_ENDPOINT } from "../../lib/constants";
 import { Task, Tournament } from "../../lib/types";
-import { convertToTimeString } from "../../lib/utils";
+import {
+  convertToTimeString,
+  error,
+  hashPassword,
+  isConflict,
+  isInPast,
+  isUnModified,
+  success,
+  warn,
+} from "../../lib/utils";
 import { DatePicker, TimeInput } from "@mantine/dates";
 import { showNotification } from "@mantine/notifications";
 
@@ -37,7 +46,7 @@ const AdminSettings: FC = () => {
   const [task, setTask] = useState<Omit<Task, "id">>({
     taskName: "",
     points: 0,
-    key: "",
+    password: "",
     hint: "",
   });
 
@@ -63,6 +72,14 @@ const AdminSettings: FC = () => {
   }, [refresh]);
 
   const createTournament = async () => {
+    if (tournamentName == "") {
+      warn("Tournament name cannot be empty.");
+      return;
+    }
+    if (isInPast(convertToTimeString(endDate, endTime))) {
+      warn("Tournament end dates should not be in the past.");
+      return;
+    }
     const response = await fetch(`${API_ENDPOINT}/tournament`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -73,53 +90,65 @@ const AdminSettings: FC = () => {
     });
     if (response.ok) {
       setRefresh(true);
-      showNotification({
-        message: "Successfully created tournament!",
-        color: "green",
-      });
+      success("Successfully created tournament!");
+    } else if (isConflict(response.status)) {
+      warn("Tournament with that name already exists");
     } else {
-      showNotification({
-        message: "Unable to create tournament. Please try again.",
-        color: "red",
-      });
+      error("Unable to create tournament. Please try again.");
     }
   };
 
   const addTeamToTournament = async () => {
-    const response = await fetch(`${API_ENDPOINT}/${tournament.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamName: team }),
-    });
+    if (tournament.id === -1) {
+      warn("Cannot add a team to an empty tournament.");
+      return;
+    }
+    if (team === "") {
+      warn("Cannot add an empty team to a tournament.");
+      return;
+    }
+    const response = await fetch(
+      `${API_ENDPOINT}/tournament/${tournament.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamName: team }),
+      }
+    );
     if (response.ok) {
-      showNotification({
-        message: `Successfully added '${team}' to tournament '${tournament.name}'!`,
-        color: "green",
-      });
+      success(
+        `Successfully added '${team}' to tournament '${tournament.name}'!`
+      );
+    } else if (isUnModified(response.status)) {
+      warn(`Team already exists in tournament.`);
     } else {
-      showNotification({
-        message: `Unable to add ${team} to tournament.`,
-        color: "red",
-      });
+      error(`Unable to add ${team} to tournament.`);
     }
   };
 
   const addTask = async () => {
+    if (task.taskName === "") {
+      warn("Task name cannot be empty.");
+      return;
+    }
+    if (task.points === 0) {
+      warn("Tasks should be worth more than 0 points.");
+      return;
+    }
+    if (task.password === "") {
+      warn("Task password cannot be empty.");
+      return;
+    }
+    const password = hashPassword(task.password);
     const response = await fetch(`${API_ENDPOINT}/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(task),
+      body: JSON.stringify({ ...task, password }),
     });
     if (response.ok) {
-      showNotification({
-        message: `Successfully created new task!`,
-        color: "green",
-      });
+      success(`Successfully created new task!`);
     } else {
-      showNotification({
-        message: "Unable to create task.",
-        color: "red",
-      });
+      error("Unable to create task.");
     }
   };
 
@@ -176,7 +205,14 @@ const AdminSettings: FC = () => {
               placeholder="Tournament 1"
               data={allTournaments.map((tournament) => tournament.name)}
               value={tournament.name}
-              onChange={(evt) => setTournament((t) => ({ ...t, name: evt }))}
+              onChange={(evt) =>
+                setTournament(
+                  (t) =>
+                    allTournaments.find(
+                      (tournament) => tournament.name === evt
+                    ) || t
+                )
+              }
               required
             />
           </Grid.Col>
@@ -203,6 +239,10 @@ const AdminSettings: FC = () => {
         <Grid>
           <Grid.Col span={12}>
             <Text size="lg">Create new Task</Text>
+            <Text size="sm" style={{ fontStyle: "italic" }}>
+              Note: Tasks will be available for teams to submit on all
+              tournaments
+            </Text>
           </Grid.Col>
           <Grid.Col span={6}>
             <TextInput
@@ -226,7 +266,9 @@ const AdminSettings: FC = () => {
             <PasswordInput
               label="Password"
               placeholder="Password1!"
-              onChange={(evt) => setTask({ ...task, key: evt.target.value })}
+              onChange={(evt) =>
+                setTask({ ...task, password: evt.target.value })
+              }
               required
             />
           </Grid.Col>
@@ -243,6 +285,9 @@ const AdminSettings: FC = () => {
           <Grid.Col>
             <Button onClick={() => addTask()}>Create Task</Button>
           </Grid.Col>
+        </Grid>
+        <Grid>
+          <></>
         </Grid>
       </Paper>
     </Container>

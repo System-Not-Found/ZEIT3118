@@ -3,13 +3,13 @@ from pydantic import BaseModel
 
 class PostTaskRequest(BaseModel):
     task_id: str
-    key: str
+    password: str
 
 
 class PostTasksRequest(BaseModel):
     taskName: str
     points: int
-    key: str
+    password: str
     hint: str
 
 

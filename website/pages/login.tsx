@@ -10,9 +10,14 @@ import {
   Button,
 } from "@mantine/core";
 import { Users, Lock } from "tabler-icons-react";
-import { hash_password, isNotFound, isUnauthorized } from "../lib/utils";
+import {
+  hashPassword,
+  isNotFound,
+  isUnauthorized,
+  success,
+  error,
+} from "../lib/utils";
 import { UserContext } from "./_app";
-import { showNotification } from "@mantine/notifications";
 
 interface LoginData {
   teamName: string;
@@ -27,27 +32,23 @@ const LoginPage: NextPage = () => {
   const context = useContext(UserContext);
 
   const handleAuthenticate = async (loginData: LoginData) => {
-    const password = hash_password(loginData.password);
+    const password = hashPassword(loginData.password);
     const response = await fetch("http://localhost:3001/login", {
       body: JSON.stringify({ ...loginData, password }),
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
       method: "POST",
     });
     if (response.ok) {
-      showNotification({
-        message: "Successfully logged in",
-        color: "green",
-      });
       const user = await response.json();
       context.toggleUser(user);
+
+      success("Successfully logged in");
       window.location.replace("/");
     } else if (isUnauthorized(response.status) || isNotFound(response.status)) {
-      showNotification({
-        message: "Invalid username and password combination",
-        color: "red",
-      });
+      error("Invalid username and password combination");
     }
   };
 

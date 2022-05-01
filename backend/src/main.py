@@ -17,8 +17,6 @@ app.add_middleware(
     allow_methods=["GET","POST","PATCH","DELETE","OPTIONS"],
     allow_headers=["Content-Type", "Set-Cookie"]
 )
-# team_id and Cookie header should match in the cookie table
-# cookie1Name=cookie1Value; cookie2Name=cookie2Value
 
 @app.get("/teams/{tournament_id}")
 #returns a list of Teams
@@ -33,33 +31,42 @@ async def handle_tasks(tournament_id: str, team_id: str):
 
 
 @app.post("/tasks")
-async def handle_post_tasks(request: PostTasksRequest):
-    id = db.insert("INSERT INTO Tasks (taskName, points, key, hint) VALUES (%s, %s, %s, %s)", request.taskName, request.points, request.key, request.hint)
+async def handle_post_tasks(request: PostTasksRequest, response: Response):
+    if len(request.taskName) > 20:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return { "msg": "Task name cannot be longer than 20 characters" }
+    if len(request.password) > 64:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return { "msg": "Task password cannot be longer than 64 characters" }
+    if len(request.hint) > 300:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return { "msg": "Task hint cannot be longer than 300 characters" }
+    id = db.insert(f"INSERT INTO Tasks (taskName, points, password, hint) VALUES (%s, %s, %s, %s)", request.taskName, request.points, request.password, request.hint)
     return { "id": id }
 
 
 @app.get("/tasks")
 async def handle_get_tasks():
-    result = db.select("SELECT id, taskName, points FROM Tasks")
+    result = db.selectall("SELECT id, taskName, points FROM Tasks")
+    if result == None:
+        return []
     return arrays_as_dict_array(["id", "taskName", "points"], result)
 
 @app.post("/tasks/{tournament_id}/{team_id}")
 async def handle_post_task(tournament_id: str, team_id: str, request: PostTaskRequest, response: Response):
-    # return 200
-    # return 403 (task key doesn't match)
-    result = db.select(f"SELECT Tasks.key FROM Tasks WHERE id = {request.task_id};")
-    if result[0] == request.key:
-        result = db.select(f"SELECT tournamentTeamID FROM TournamentTeams WHERE teamID = '{team_id}' AND tournamentID = '{tournament_id}';")
+    result = db.select(f"SELECT Tasks.password FROM Tasks WHERE id = %s", request.task_id)
+    if result[0] == request.password:
+        result = db.select(f"SELECT tournamentTeamID FROM TournamentTeams WHERE teamID = %s AND tournamentID = %s", team_id, tournament_id)
         tournamentTeam = result[0]
         if tournamentTeam != None:
-            id = db.insert(f"INSERT INTO TasksCompleted (taskID,tournamentTeamID) VALUES ('{request.task_id}','{tournamentTeam}';")
+            id = db.insert(f"INSERT INTO TasksCompleted (taskID,tournamentTeamID) VALUES (%s,%s)", request.task_id, tournamentTeam)
             return { "id": id }
         else:
             response.status_code = status.HTTP_404_NOT_FOUND
             return { "msg": "Could not find team in tournament" }
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-        return { "msg": "Incorrect task key provided" }
+        return { "msg": "Incorrect task password provided" }
     
 
 @app.get("/hints/{task_id}")
@@ -96,9 +103,13 @@ async def handle_post_tournament(request: PostTournamentRequest):
 
 
 @app.patch("/tournament/{tournament_id}")
-async def handle_patch_tournament(tournament_id: str, request: PatchTournamentRequest):
+async def handle_patch_tournament(tournament_id: str, request: PatchTournamentRequest, response: Response):
     result = db.select("SELECT id FROM Teams WHERE teamName = %s", request.teamName)
     team_id = arrays_as_dict(["id"], result)["id"]
+    result = db.select("SELECT teamID from TournamentTeams WHERE teamID = %s", team_id)
+    if result is not None:
+        response.status_code = status.HTTP_304_NOT_MODIFIED
+        return { "msg": f"Team '{request.teamName}' already exists on Tournament" }
     id = db.insert(f"INSERT INTO TournamentTeams (teamID, tournamentID) VALUES (%s, %s)", team_id, tournament_id)
     return { "id": id }
 
@@ -126,7 +137,7 @@ async def handle_register(request: RegisterRequest, response: Response):
     cookie = generate_random_string()
     db.insert(f"INSERT INTO Cookies (teamId, cookie) VALUES (%s, %s)", id, cookie)
 
-    response.headers["Set-Cookie"] = f"team_login={cookie}; HttpOnly;"
+    response.set_cookie(key="team_login", value=cookie, httponly=True)
     # Return the team id
     return { "id": id }
 
@@ -149,7 +160,7 @@ async def handle_login(request: LoginRequest, response: Response):
         cookie = generate_random_string()
         db.insert(f"INSERT INTO Cookies (teamId, cookie) VALUES (%s, %s)", result["id"], cookie)
 
-        response.headers["Set-Cookie"] = f"team_login={cookie}; HttpOnly;"
+        response.set_cookie(key="team_login", value=cookie, httponly=True)
         return result
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
@@ -158,7 +169,6 @@ async def handle_login(request: LoginRequest, response: Response):
 
 @app.get("/session")
 async def handle_session(response: Response, team_login: Optional[str] = Cookie(None)):
-    print(team_login)
     if team_login != None:
         result = db.select("SELECT teamID FROM Cookies WHERE cookie = %s", team_login)
         if result == None:
@@ -166,7 +176,7 @@ async def handle_session(response: Response, team_login: Optional[str] = Cookie(
             return { "msg": "Cookie provided is invalid"}
         result = arrays_as_dict(["teamID"], result)
         if result != None:
-            team_result = db.select("SELECT * FROM Teams WHERE teamID = %s", result["teamID"])
+            team_result = db.select("SELECT * FROM Teams WHERE id = %s", result["teamID"])
             auth_result = db.select("SELECT admin FROM Auth WHERE teamID = %s", result["teamID"])
             auth_result = arrays_as_dict(["admin"], auth_result)
             team_result = list(team_result)
@@ -175,6 +185,16 @@ async def handle_session(response: Response, team_login: Optional[str] = Cookie(
     else:
         response.status_code = status.HTTP_204_NO_CONTENT
         return { "msg": "No cookie provided" }
+
+@app.get("/logout")
+async def handle_logout(response: Response, team_login: Optional[str] = Cookie(None)):
+    if team_login != None:
+        db.delete("DELETE FROM Cookies WHERE cookie = %s", team_login)
+        response.delete_cookie("team_login")
+        return { "msg": "Successfully logged out" }
+    else:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return { "msg": "Not logged in" }
 
 
 @app.get("/teams")

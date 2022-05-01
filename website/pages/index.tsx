@@ -51,7 +51,7 @@ const TournamentCard: FC<Tournament> = ({ id, name, endTime }) => {
     <Grid.Col span={6}>
       <Link href={`/tournament/${id}`}>
         <Paper
-          shadow="xs"
+          shadow="sm"
           p="lg"
           sx={(theme) => ({
             ":hover": {
