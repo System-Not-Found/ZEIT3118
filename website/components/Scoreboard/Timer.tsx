@@ -18,7 +18,8 @@ interface TimeLeft {
 
 const Timer: FC<TimerProps> = ({ year, month, day, hour, minute }) => {
   const calculateTimeLeft = (): TimeLeft => {
-    const difference = +new Date(year, month, day, hour, minute) - +new Date();
+    const difference =
+      +new Date(year, month - 1, day, hour, minute) - +new Date();
 
     let timeLeft: TimeLeft = { day: 0, hour: 0, minute: 0, second: 0 };
     if (difference > 0) {
@@ -45,7 +46,9 @@ const Timer: FC<TimerProps> = ({ year, month, day, hour, minute }) => {
   return (
     <Card>
       <Text size="xl" weight="bold">
-        {timeLeft.day}D {timeLeft.hour}H {timeLeft.minute}M {timeLeft.second}S
+        {Object.entries(timeLeft).every(([_, val]) => val === 0)
+          ? "Times Up!"
+          : `Time Left: ${timeLeft.day} Days ${timeLeft.hour} Hours ${timeLeft.minute} Minutes ${timeLeft.second} Seconds`}
       </Text>
     </Card>
   );

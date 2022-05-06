@@ -23,3 +23,4 @@ def arrays_as_dict(keys: List[str], values: List[str]) -> Dict[str, str]:
 
 def arrays_as_dict_array(keys: List[str], values: List[List[str]]) -> List[Dict[str, str]]:
     return [arrays_as_dict(keys, val) for val in values]
+

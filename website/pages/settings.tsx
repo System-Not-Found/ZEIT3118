@@ -1,7 +1,7 @@
 import { NextPage } from "next";
 import { useState, useContext } from "react";
 import { UserContext } from "./_app";
-import AdminSettings from "../components/settings/AdminSettings";
+import AdminSettings from "../components/settings/Admin/AdminSettings";
 import UserSettings from "../components/settings/UserSettings";
 
 const Settings: NextPage = () => {

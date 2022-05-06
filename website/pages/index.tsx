@@ -9,6 +9,14 @@ import { getEndTime, isInPast } from "../lib/utils";
 const Home: NextPage = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
+  const activeTournaments = tournaments.filter(
+    ({ endTime }) => endTime && !isInPast(endTime)
+  );
+
+  const pastTournaments = tournaments.filter(
+    ({ endTime }) => endTime && isInPast(endTime)
+  );
+
   useEffect(() => {
     async function getTournaments(): Promise<void> {
       const response = await fetch(`${API_ENDPOINT}/tournaments`);
@@ -23,22 +31,24 @@ const Home: NextPage = () => {
   return (
     <Container size="lg">
       {tournaments ? (
-        <Stack justify="center" align="stretch">
-          <Text size="lg">Active Tournaments:</Text>
-          <Grid justify="center" align="center">
-            {tournaments
-              .filter(({ endTime }) => endTime && !isInPast(endTime))
-              .map((tournament, idx) => (
-                <TournamentCard key={idx} {...tournament} />
-              ))}
+        <>
+          <Text size="lg" sx={(theme) => ({ paddingTop: theme.spacing.xl })}>
+            Active Tournaments:
+          </Text>
+          <Grid align="center">
+            {activeTournaments.map((tournament, idx) => (
+              <TournamentCard key={`active-${idx}`} {...tournament} />
+            ))}
           </Grid>
-          <Text size="lg">All Tournaments:</Text>
-          <Grid justify="center" align="center">
-            {tournaments.map((tournament, idx) => {
-              <TournamentCard key={idx} {...tournament} />;
-            })}
+          <Text size="lg" sx={(theme) => ({ paddingTop: theme.spacing.xl })}>
+            Past Tournaments:
+          </Text>
+          <Grid align="center">
+            {pastTournaments.map((tournament, idx) => (
+              <TournamentCard key={idx} {...tournament} />
+            ))}
           </Grid>
-        </Stack>
+        </>
       ) : (
         <Text size="md">There are no active tournaments</Text>
       )}
@@ -51,7 +61,7 @@ const TournamentCard: FC<Tournament> = ({ id, name, endTime }) => {
     <Grid.Col span={6}>
       <Link href={`/tournament/${id}`}>
         <Paper
-          shadow="sm"
+          shadow="md"
           p="lg"
           sx={(theme) => ({
             ":hover": {

@@ -5,6 +5,7 @@ import { User } from "../lib/types";
 import { isUnauthorized } from "../lib/utils";
 import { NotificationsProvider } from "@mantine/notifications";
 import { API_ENDPOINT } from "../lib/constants";
+import "../styles/globals.css";
 
 interface UserContextProps {
   user: User;
@@ -49,7 +50,7 @@ function MyApp({ Component, pageProps, ...appProps }: AppProps) {
   return (
     <NotificationsProvider>
       <UserContext.Provider value={{ user, toggleUser: setUser }}>
-        {includeNav ? <Navigation avatar={user.avatar} /> : <></>}
+        {includeNav ? <Navigation id={user.id} avatar={user.avatar} /> : <></>}
         <Component {...pageProps} />
       </UserContext.Provider>
     </NotificationsProvider>

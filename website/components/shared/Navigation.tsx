@@ -1,16 +1,17 @@
-import { Avatar, Container, Text, Menu } from "@mantine/core";
+import { Avatar, Container, Text, Menu, Button } from "@mantine/core";
 import Link from "next/link";
 import { NextLink } from "@mantine/next";
 import { FC } from "react";
 import { Settings, Logout } from "tabler-icons-react";
 import { API_ENDPOINT, AVATAR_NAMES } from "../../lib/constants";
-import { error, success } from "../../lib/utils";
+import { error, getAvatarSrc, success } from "../../lib/utils";
 
 interface NavigationProps {
+  id: number;
   avatar: number;
 }
 
-const Navigation: FC<NavigationProps> = ({ avatar }) => {
+const Navigation: FC<NavigationProps> = ({ id, avatar }) => {
   const handleLogout = async () => {
     const response = await fetch(`${API_ENDPOINT}/logout`, {
       credentials: "include",
@@ -23,7 +24,7 @@ const Navigation: FC<NavigationProps> = ({ avatar }) => {
     }
   };
 
-  const loggedIn = avatar !== -1;
+  const loggedIn = id !== -1;
 
   return (
     <Container
@@ -46,7 +47,7 @@ const Navigation: FC<NavigationProps> = ({ avatar }) => {
           trigger="hover"
           control={
             <Avatar
-              src={loggedIn ? `/avatars/${AVATAR_NAMES[avatar]}.png` : null}
+              src={getAvatarSrc(avatar)}
               radius="lg"
               size="lg"
               sx={{ ":hover": { cursor: "pointer" } }}
@@ -62,8 +63,14 @@ const Navigation: FC<NavigationProps> = ({ avatar }) => {
         </Menu>
       ) : (
         <div>
-          <Link href="/login">Log in</Link>
-          <Link href="/signup">Sign up</Link>
+          <Link href="/login">
+            <Button sx={(theme) => ({ margin: theme.spacing.md })}>
+              Log in
+            </Button>
+          </Link>
+          <Link href="/signup">
+            <Button variant="outline">Sign Up</Button>
+          </Link>
         </div>
       )}
     </Container>

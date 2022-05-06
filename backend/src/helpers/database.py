@@ -1,4 +1,5 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
+from helpers.utils import combine_hash, generate_random_string
 import mysql.connector
 from helpers.sql import init_commands
 
@@ -19,6 +20,13 @@ class Database():
             cursor = self.database.cursor()
             cursor.execute(command)
             cursor.close()
+        
+        # Add Admin
+        id = self.insert("INSERT IGNORE INTO Teams (teamName, avatar, wins) VALUES (%s, %s, %s)", "Admin", -1, 0)
+        salt = generate_random_string() 
+        password = "6d4525c2a21f9be1cca9e41f3aa402e0765ee5fcc3e7fea34a169b1730ae386e"
+        password = combine_hash(salt, password)
+        self.insert("INSERT IGNORE INTO Auth (teamID, password, salt, admin) VALUES (%s, %s, %s, %s)", id, password, salt, True)
 
 
     def __validate_query_against_type(query: str, type: str) -> None:
@@ -36,6 +44,12 @@ class Database():
         except Exception as err:
             cursor.close()  
             raise err
+
+    def selectval(self, query: str, *args):
+        val = self.select(query, *args)
+        if val != None:
+            return val[0]
+        return None
 
     def selectall(self, query: str, *args) -> List[Tuple]:
         Database.__validate_query_against_type(query, 'select')

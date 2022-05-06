@@ -1,9 +1,8 @@
 init_commands = [
     """CREATE TABLE IF NOT EXISTS `Teams` (
         `id` INT PRIMARY KEY AUTO_INCREMENT,
-        `teamName` VARCHAR(20),
+        `teamName` VARCHAR(20) UNIQUE,
         `avatar` INT,
-        `points` INT,
         `wins` INT
     );""",
 
@@ -18,7 +17,7 @@ init_commands = [
     """
     CREATE TABLE IF NOT EXISTS `Tasks` (
         `id` INT PRIMARY KEY AUTO_INCREMENT,
-        `taskName` VARCHAR(20),
+        `taskName` VARCHAR(20) UNIQUE,
         `points` INT,
         `password` VARCHAR(64),
         `hint` VARCHAR(300)
@@ -26,14 +25,24 @@ init_commands = [
 
     """
     CREATE TABLE IF NOT EXISTS `TasksCompleted` (
-        `taskID` INT PRIMARY KEY,
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `taskID` INT,
         `tournamentTeamID` INT
     );""",
     
+    """
+    CREATE TABLE IF NOT EXISTS `HintsCompleted` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `taskID` INT,
+        `tournamentTeamID` INT
+    );
+    """,
+
     """CREATE TABLE IF NOT EXISTS `TournamentTeams` (
         `id` INT AUTO_INCREMENT,
         `teamID` INT,
         `tournamentID` INT,
+        `points` INT,
         PRIMARY KEY (`id`, `teamID`)
     );""",
 
@@ -48,15 +57,19 @@ init_commands = [
     `teamID` INT
     );""",
 
-    "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`id`);",
+    "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`id`) ON DELETE CASCADE;",
 
-    "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`tournamentTeamID`) REFERENCES `TournamentTeams` (`id`);",
+    "ALTER TABLE `TasksCompleted` ADD FOREIGN KEY (`tournamentTeamID`) REFERENCES `TournamentTeams` (`id`) ON DELETE CASCADE;",
 
-    "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);",
+    "ALTER TABLE `HintsCompleted` ADD FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`id`) ON DELETE CASCADE;",
 
-    "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`tournamentID`) REFERENCES `Tournaments` (`id`);",
+    "ALTER TABLE `HintsCompleted` ADD FOREIGN KEY (`tournamentTeamID`) REFERENCES `TournamentTeams` (`id`) ON DELETE CASCADE;",
 
-    "ALTER TABLE `Cookies` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);",
+    "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`) ON DELETE CASCADE;",
 
-    "ALTER TABLE `Auth` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`);"
+    "ALTER TABLE `TournamentTeams` ADD FOREIGN KEY (`tournamentID`) REFERENCES `Tournaments` (`id`) ON DELETE CASCADE;",
+
+    "ALTER TABLE `Cookies` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`) ON DELETE CASCADE;",
+
+    "ALTER TABLE `Auth` ADD FOREIGN KEY (`teamID`) REFERENCES `Teams` (`id`) ON DELETE CASCADE;"
 ]

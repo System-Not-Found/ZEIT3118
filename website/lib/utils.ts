@@ -1,6 +1,6 @@
 import { showNotification } from "@mantine/notifications";
 import sjcl from "sjcl";
-import { API_ENDPOINT } from "./constants";
+import { API_ENDPOINT, AVATAR_NAMES } from "./constants";
 import { Task, Team, Tournament, KnownTask } from "./types";
 
 // Logging
@@ -45,8 +45,12 @@ export const isConflict = (status: number) => {
   return status === 409;
 };
 
-export const isUnModified = (status: number) => {
+export const isUnmodified = (status: number) => {
   return status == 304;
+};
+
+export const isNoContent = (status: number) => {
+  return status == 204;
 };
 
 interface Time {
@@ -67,26 +71,34 @@ export const convertFromTimeString = (timeString: string): Time => {
   } as Time;
 };
 
+const padNumber = (num: number): string => num.toString().padStart(2, "0");
+
 export const getEndTime = (timeString: string): string => {
   const time = convertFromTimeString(timeString);
-  return `Ending on: ${time.day}/${time.month}/${time.year} at ${time.hour}:${time.minute}`;
+  return `Ending on: ${padNumber(time.day)}/${padNumber(time.month)}/${
+    time.year
+  } at ${padNumber(time.hour)}:${padNumber(time.minute)}`;
 };
 
 export const convertToTimeString = (date: Date, time: Date): string => {
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  return `${time.getMinutes()}${time.getHours()}${date.getDate()}${month}${date.getFullYear()}`;
+  return `${padNumber(time.getMinutes())}${padNumber(
+    time.getHours()
+  )}${padNumber(date.getDate())}${padNumber(
+    date.getMonth() + 1
+  )}${date.getFullYear()}`;
 };
 
 export const isInPast = (dateString: string): boolean => {
   const time = convertFromTimeString(dateString);
   const now = new Date();
-  return (
-    time.year < now.getFullYear() &&
-    time.month < now.getMonth() &&
-    time.day < now.getDay() &&
-    time.hour < now.getHours() &&
-    time.minute < now.getMinutes()
+  const timeDate = new Date(
+    time.year,
+    time.month - 1,
+    time.day,
+    time.hour,
+    time.minute
   );
+  return timeDate < now;
 };
 
 export const hashPassword = (password: string) => {
@@ -114,7 +126,6 @@ const getTeamData = async (id: string): Promise<Team[]> => {
 
 const getTaskData = async (): Promise<KnownTask[]> => {
   const tasks = await fetch(`${API_ENDPOINT}/tasks`);
-  console.log(tasks);
   return (await tasks.json()) as KnownTask[];
 };
 
@@ -128,4 +139,10 @@ export const getAllTournamentIds = async () => {
       },
     };
   });
+};
+
+export const getAvatarSrc = (avatarID: number) => {
+  return avatarID !== -1
+    ? `/avatars/${AVATAR_NAMES[avatarID]}.png`
+    : `/avatars/admin.png`;
 };

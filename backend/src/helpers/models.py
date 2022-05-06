@@ -14,7 +14,7 @@ class PostTasksRequest(BaseModel):
 
 
 class GetHintRequest(BaseModel):
-    team_id: str
+    task_id: str
 
 
 class PostTournamentRequest(BaseModel):

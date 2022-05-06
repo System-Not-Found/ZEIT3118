@@ -18,6 +18,7 @@ import {
   error,
 } from "../lib/utils";
 import { UserContext } from "./_app";
+import Link from "next/link";
 
 interface LoginData {
   teamName: string;
@@ -53,8 +54,8 @@ const LoginPage: NextPage = () => {
   };
 
   return (
-    <Container size="xs">
-      <Card>
+    <Container size="sm">
+      <Card shadow="lg" p="xl">
         <Grid align="center" justify="space-between">
           <Grid.Col>
             <Text>Login</Text>
@@ -85,8 +86,23 @@ const LoginPage: NextPage = () => {
               required={true}
             />
           </Grid.Col>
-          <Grid.Col span={10}>
+          <Grid.Col span={6}>
             <Button onClick={() => handleAuthenticate(loginData)}>Login</Button>
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Link href="/signup">
+              <Text
+                size="sm"
+                sx={{
+                  "&:hover": {
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  },
+                }}
+              >
+                Don't have an account? Sign up
+              </Text>
+            </Link>
           </Grid.Col>
         </Grid>
       </Card>

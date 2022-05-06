@@ -15,7 +15,7 @@ import { Users, Lock } from "tabler-icons-react";
 import { API_ENDPOINT, AVATAR_NAMES } from "../lib/constants";
 import { error, hashPassword, isConflict, success } from "../lib/utils";
 import { UserContext } from "./_app";
-import cookie from "js-cookie";
+import Link from "next/link";
 
 interface RegisterData {
   teamName: string;
@@ -92,8 +92,8 @@ const SignUp: NextPage = () => {
   };
 
   return (
-    <Container size="xs">
-      <Card>
+    <Container size="sm">
+      <Card shadow="lg" p="xl">
         <Grid align="center" justify="space-between">
           <Grid.Col>
             <Text>Register</Text>
@@ -126,17 +126,23 @@ const SignUp: NextPage = () => {
             </Text>
             <Grid>
               {AVATAR_NAMES.map((avatar, idx) => (
-                <Grid.Col span={2}>
+                <Grid.Col span={2} key={idx}>
                   <Image
                     onClick={() => setUser({ ...user, avatar: idx })}
                     src={`/avatars/${avatar}.png`}
-                    sx={(theme) => ({
+                    sx={{
                       border: user.avatar === idx ? "2px solid black" : "",
                       borderRadius: "50%",
+                      width: "75px",
+                      height: "75px",
                       ":hover": {
                         cursor: "pointer",
                       },
-                    })}
+                      "@media (max-width: 600px)": {
+                        width: "40px",
+                        height: "40px",
+                      },
+                    }}
                   />
                 </Grid.Col>
               ))}
@@ -167,8 +173,23 @@ const SignUp: NextPage = () => {
               }
             />
           </Grid.Col>
-          <Grid.Col span={2}>
+          <Grid.Col span={6}>
             <Button onClick={() => validateRegister()}>Sign Up</Button>
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Link href="/login">
+              <Text
+                size="sm"
+                sx={{
+                  "&:hover": {
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  },
+                }}
+              >
+                Already have an account? Log in
+              </Text>
+            </Link>
           </Grid.Col>
         </Grid>
       </Card>
