@@ -14,22 +14,26 @@ import {
   warn,
   error,
   success,
-  hashPassword,
+  sha256,
   isUnauthorized,
 } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
-const CreateTaskForm: FC<GlobalSettingsData> = ({ refresh }) => {
+const CreateTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
   const [task, setTask] = useState<Omit<Task, "id">>({
-    taskName: "",
+    name: "",
     points: 0,
     password: "",
     hint: "",
   });
 
   const createTask = async () => {
-    if (task.taskName === "") {
+    if (task.name === "") {
       warn("Task name cannot be empty.");
+      return;
+    }
+    if (tasks.find((t) => t.name === task.name)) {
+      warn("Task name must be unique");
       return;
     }
     if (task.points === 0) {
@@ -40,8 +44,8 @@ const CreateTaskForm: FC<GlobalSettingsData> = ({ refresh }) => {
       warn("Task password cannot be empty.");
       return;
     }
-    const password = hashPassword(task.password);
-    const response = await fetch(`${API_ENDPOINT}/tasks`, {
+    const password = sha256(task.password);
+    const response = await fetch(`${API_ENDPOINT}/task`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...task, password }),
@@ -64,7 +68,7 @@ const CreateTaskForm: FC<GlobalSettingsData> = ({ refresh }) => {
           label="Name"
           placeholder="Task 1"
           required
-          onChange={(evt) => setTask({ ...task, taskName: evt.target.value })}
+          onChange={(evt) => setTask({ ...task, name: evt.target.value })}
         />
       </Grid.Col>
       <Grid.Col span={6}>
@@ -95,7 +99,7 @@ const CreateTaskForm: FC<GlobalSettingsData> = ({ refresh }) => {
       </Grid.Col>
       <Grid.Col>
         <Button
-          disabled={task.taskName === "" || task.password === ""}
+          disabled={task.name === "" || task.password === ""}
           onClick={() => createTask()}
         >
           Create Task

@@ -1,14 +1,12 @@
 import { NextPage } from "next";
-import { useState, useContext } from "react";
-import { UserContext } from "./_app";
 import AdminSettings from "../components/settings/Admin/AdminSettings";
 import UserSettings from "../components/settings/UserSettings";
+import { useSession } from "../lib/hooks";
 
 const Settings: NextPage = () => {
-  const user = useContext(UserContext);
-  const loggedIn = user.user.id !== -1;
-  if (loggedIn) {
-    return user.user.admin ? <AdminSettings /> : <UserSettings />;
+  const { user } = useSession();
+  if (user) {
+    return user.admin ? <AdminSettings /> : <UserSettings />;
   } else {
     return <></>;
   }

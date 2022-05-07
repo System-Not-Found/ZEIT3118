@@ -5,7 +5,7 @@ import { success, error, isUnauthorized, warn } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
 const DeleteTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
-  const [task, setTask] = useState({ id: -1, taskName: "" });
+  const [task, setTask] = useState({ id: -1, name: "" });
 
   const handleDeleteTask = async (): Promise<void> => {
     const response = await fetch(`${API_ENDPOINT}/task/${task.id}`, {
@@ -15,7 +15,7 @@ const DeleteTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
     });
     if (response.ok) {
       success("Successfully deleted task");
-      setTask({ id: -1, taskName: "" });
+      setTask({ id: -1, name: "" });
       refresh();
     } else if (isUnauthorized(response.status)) {
       warn("Deleting a task requires admin privileges");
@@ -30,25 +30,22 @@ const DeleteTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
         <Select
           label="Choose task to delete"
           placeholder="Task Name"
-          data={tasks.map(({ taskName }) => ({
-            value: taskName,
-            label: taskName,
+          data={tasks.map(({ name }) => ({
+            value: name,
+            label: name,
           }))}
-          value={task.taskName}
+          value={task.name}
           onChange={(evt) =>
             setTask({
-              id: tasks.find((task) => task.taskName === evt)?.id || 0,
-              taskName: evt || "",
+              id: tasks.find((task) => task.name === evt)?.id || 0,
+              name: evt || "",
             })
           }
           required
         />
       </Grid.Col>
       <Grid.Col span={12}>
-        <Button
-          disabled={task.taskName === ""}
-          onClick={() => handleDeleteTask()}
-        >
+        <Button disabled={task.name === ""} onClick={() => handleDeleteTask()}>
           Delete Task
         </Button>
       </Grid.Col>

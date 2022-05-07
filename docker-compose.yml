@@ -14,16 +14,16 @@ services:
       - MYSQL_DATABASE=scoreboard
       - MYSQL_ROOT_HOST=%
 
-  api:
-    build: backend/
-    ports:
-      - "3001:3001"
-    restart: on-failure:10
-    networks:
-      - frontend
-      - backend
-    depends_on:
-      - "db"
+  # api:
+  #   build: backend/
+  #   ports:
+  #     - "3001:3001"
+  #   restart: on-failure:10
+  #   networks:
+  #     - frontend
+  #     - backend
+  #   depends_on:
+  #     - "db"
 
 # DATABASE_LOCATION=/c/Users/seanh/Documents/ZEIT3118/database
 

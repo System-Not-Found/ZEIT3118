@@ -1,7 +1,6 @@
 import { Grid, TextInput, Button, Text } from "@mantine/core";
 import { DatePicker, TimeInput } from "@mantine/dates";
 import { FC, useState } from "react";
-import { API_ENDPOINT } from "../../../lib/constants";
 import { Tournament } from "../../../lib/types";
 import {
   warn,

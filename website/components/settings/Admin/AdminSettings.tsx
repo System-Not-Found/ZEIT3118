@@ -35,10 +35,10 @@ const AdminSettings = () => {
       const teamResp = await fetch(`${API_ENDPOINT}/teams`);
       const teamNames = await teamResp.json();
 
-      const tournamentResp = await fetch(`${API_ENDPOINT}/tournaments`);
+      const tournamentResp = await fetch(`${API_ENDPOINT}/tournament`);
       const tournaments = await tournamentResp.json();
 
-      const taskResp = await fetch(`${API_ENDPOINT}/tasks`);
+      const taskResp = await fetch(`${API_ENDPOINT}/task`);
       const tasks = await taskResp.json();
 
       setGlobalSettings({

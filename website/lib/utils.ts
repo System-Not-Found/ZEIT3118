@@ -1,7 +1,6 @@
 import { showNotification } from "@mantine/notifications";
 import sjcl from "sjcl";
-import { API_ENDPOINT, AVATAR_NAMES } from "./constants";
-import { Task, Team, Tournament, KnownTask } from "./types";
+import { AVATAR_NAMES } from "./constants";
 
 // Logging
 export const success = (message: string, silent = false): void => {
@@ -101,44 +100,23 @@ export const isInPast = (dateString: string): boolean => {
   return timeDate < now;
 };
 
-export const hashPassword = (password: string) => {
+export const sha256 = (password: string) => {
   const bits = sjcl.hash.sha256.hash(password);
   return sjcl.codec.hex.fromBits(bits);
 };
 
-export const getTournamentPageData = async (id: string) => {
-  return {
-    tournament: await getTournamentData(id),
-    teams: await getTeamData(id),
-    tasks: await getTaskData(),
-  };
+export const saltPassword = (salt: string, password: string): string => {
+  return sha256(`${salt}${password}`);
 };
 
-const getTournamentData = async (id: string): Promise<Tournament> => {
-  const tournamentResp = await fetch(`${API_ENDPOINT}/tournament/${id}`);
-  return (await tournamentResp.json()) as Tournament;
-};
-
-const getTeamData = async (id: string): Promise<Team[]> => {
-  const teamsResp = await fetch(`${API_ENDPOINT}/teams/${id}`);
-  return (await teamsResp.json()) as Team[];
-};
-
-const getTaskData = async (): Promise<KnownTask[]> => {
-  const tasks = await fetch(`${API_ENDPOINT}/tasks`);
-  return (await tasks.json()) as KnownTask[];
-};
-
-export const getAllTournamentIds = async () => {
-  const response = await fetch(`${API_ENDPOINT}/tournaments`);
-  const tournaments = (await response.json()) as Tournament[];
-  return tournaments.map((t) => {
-    return {
-      params: {
-        id: t.id.toString(),
-      },
-    };
-  });
+export const generateRandomString = (size = 16) => {
+  const ALPHABET =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let result = "";
+  for (let i = 0; i < size; i++) {
+    result += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));
+  }
+  return result;
 };
 
 export const getAvatarSrc = (avatarID: number) => {

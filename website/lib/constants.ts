@@ -1,5 +1,3 @@
-export const API_ENDPOINT = "http://localhost:3001";
-
 export const AVATAR_NAMES = [
   "chicken",
   "bear",
@@ -14,3 +12,8 @@ export const AVATAR_NAMES = [
   "sloth",
   "rabbit",
 ];
+
+export const API_ENDPOINT =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000/api"
+    : "http://localhost:3000/api";

@@ -11,13 +11,12 @@ import {
 } from "@mantine/core";
 import { Users, Lock } from "tabler-icons-react";
 import {
-  hashPassword,
+  sha256,
   isNotFound,
   isUnauthorized,
   success,
   error,
 } from "../lib/utils";
-import { UserContext } from "./_app";
 import Link from "next/link";
 
 interface LoginData {
@@ -30,11 +29,10 @@ const LoginPage: NextPage = () => {
     teamName: "",
     password: "",
   });
-  const context = useContext(UserContext);
 
   const handleAuthenticate = async (loginData: LoginData) => {
-    const password = hashPassword(loginData.password);
-    const response = await fetch("http://localhost:3001/login", {
+    const password = sha256(loginData.password);
+    const response = await fetch("/api/login", {
       body: JSON.stringify({ ...loginData, password }),
       credentials: "include",
       headers: {
@@ -43,9 +41,6 @@ const LoginPage: NextPage = () => {
       method: "POST",
     });
     if (response.ok) {
-      const user = await response.json();
-      context.toggleUser(user);
-
       success("Successfully logged in");
       window.location.replace("/");
     } else if (isUnauthorized(response.status) || isNotFound(response.status)) {
@@ -90,7 +85,7 @@ const LoginPage: NextPage = () => {
             <Button onClick={() => handleAuthenticate(loginData)}>Login</Button>
           </Grid.Col>
           <Grid.Col span={6}>
-            <Link href="/signup">
+            <Link href="/signup" passHref={true}>
               <Text
                 size="sm"
                 sx={{
@@ -100,7 +95,7 @@ const LoginPage: NextPage = () => {
                   },
                 }}
               >
-                Don't have an account? Sign up
+                Do not have an account? Sign up
               </Text>
             </Link>
           </Grid.Col>

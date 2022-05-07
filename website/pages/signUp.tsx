@@ -10,11 +10,10 @@ import {
 } from "@mantine/core";
 import { NextPage } from "next";
 import { useState, useEffect, useContext } from "react";
-import PasswordStrength from "../components/Login/PasswordStrength";
+import PasswordStrength from "../components/login/PasswordStrength";
 import { Users, Lock } from "tabler-icons-react";
 import { API_ENDPOINT, AVATAR_NAMES } from "../lib/constants";
-import { error, hashPassword, isConflict, success } from "../lib/utils";
-import { UserContext } from "./_app";
+import { error, sha256, isConflict, success } from "../lib/utils";
 import Link from "next/link";
 
 interface RegisterData {
@@ -45,7 +44,6 @@ const SignUp: NextPage = () => {
     password: "",
     confirmPassword: "",
   };
-  const context = useContext(UserContext);
 
   const [tryRegister, setTryRegister] = useState(false);
   const [user, setUser] = useState<RegisterInfo>(emptyUser);
@@ -61,7 +59,7 @@ const SignUp: NextPage = () => {
   }, []);
 
   const handleRegister = async (user: RegisterData): Promise<void> => {
-    const password = hashPassword(user.password);
+    const password = sha256(user.password);
     const response = await fetch(`${API_ENDPOINT}/register`, {
       body: JSON.stringify({ ...user, password }),
       credentials: "include",
@@ -70,8 +68,6 @@ const SignUp: NextPage = () => {
     });
 
     if (response.ok) {
-      const user = await response.json();
-      context.toggleUser(user);
       success("Successfully added team!");
       window.location.replace("/");
     } else if (isConflict(response.status)) {
@@ -128,6 +124,7 @@ const SignUp: NextPage = () => {
               {AVATAR_NAMES.map((avatar, idx) => (
                 <Grid.Col span={2} key={idx}>
                   <Image
+                    alt={`Avatar image: ${avatar}`}
                     onClick={() => setUser({ ...user, avatar: idx })}
                     src={`/avatars/${avatar}.png`}
                     sx={{
@@ -177,7 +174,7 @@ const SignUp: NextPage = () => {
             <Button onClick={() => validateRegister()}>Sign Up</Button>
           </Grid.Col>
           <Grid.Col span={6}>
-            <Link href="/login">
+            <Link href="/login" passHref={true}>
               <Text
                 size="sm"
                 sx={{

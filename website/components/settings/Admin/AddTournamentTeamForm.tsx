@@ -1,6 +1,5 @@
 import { Grid, Button, Text, Select } from "@mantine/core";
 import { FC, useState } from "react";
-import { API_ENDPOINT } from "../../../lib/constants";
 import { Tournament } from "../../../lib/types";
 import {
   warn,
@@ -9,6 +8,7 @@ import {
   isUnmodified,
   isUnauthorized,
 } from "../../../lib/utils";
+import { API_ENDPOINT } from "../../../lib/constants";
 import { GlobalSettingsData } from "./AdminSettings";
 
 const AddTournamentTeamForm: FC<GlobalSettingsData> = ({
