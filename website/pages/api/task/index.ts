@@ -33,11 +33,11 @@ async function handlePost(
     return;
   }
 
-  const { taskName, points, password, hint } = req.body;
+  const { name, points, password, hint } = req.body;
 
   await prisma.task.create({
     data: {
-      name: taskName,
+      name: name,
       points,
       password,
       hint: {

@@ -1,7 +1,7 @@
 import { Grid, Button, Select } from "@mantine/core";
 import { FC, useState } from "react";
 import { API_ENDPOINT } from "../../../lib/constants";
-import { success, error, isUnauthorized, warn } from "../../../lib/utils";
+import { logNetworkCall } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
 const DeleteTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
@@ -13,14 +13,10 @@ const DeleteTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
       credentials: "include",
       headers: { "Content-Type": "application/json" },
     });
+    logNetworkCall(response, "Unable to delete task. Please try again later.");
     if (response.ok) {
-      success("Successfully deleted task");
       setTask({ id: -1, name: "" });
       refresh();
-    } else if (isUnauthorized(response.status)) {
-      warn("Deleting a task requires admin privileges");
-    } else {
-      error("Unable to delete task");
     }
   };
 

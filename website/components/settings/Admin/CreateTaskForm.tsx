@@ -16,6 +16,7 @@ import {
   success,
   sha256,
   isUnauthorized,
+  logNetworkCall,
 } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
@@ -51,13 +52,9 @@ const CreateTaskForm: FC<GlobalSettingsData> = ({ refresh, tasks }) => {
       body: JSON.stringify({ ...task, password }),
       credentials: "include",
     });
+    logNetworkCall(response, "Unable to create task. Please try again later");
     if (response.ok) {
-      success(`Successfully created new task!`);
       refresh();
-    } else if (isUnauthorized(response.status)) {
-      warn("Creating a task requires admin privileges");
-    } else {
-      error("Unable to create task.");
     }
   };
 

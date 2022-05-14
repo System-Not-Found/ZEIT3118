@@ -36,9 +36,9 @@ model Tournament {
 model TournamentTeam {
   id            Int             @id @default(autoincrement())
   team          Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId        Int             @unique
+  teamId        Int
   tournament    Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  tournamentId  Int             @unique
+  tournamentId  Int
   completedTask CompletedTask[]
   completedHint CompletedHint[]
 }

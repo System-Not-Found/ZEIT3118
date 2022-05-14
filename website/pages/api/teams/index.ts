@@ -1,5 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma, { checkAdminPrivileges } from "../../../lib/prisma";
+import prisma, {
+  checkAdminPrivileges,
+  getTeamIdFromCookies,
+} from "../../../lib/prisma";
+import { saltPassword } from "../../../lib/utils";
 
 export default async function handler(
   req: NextApiRequest,
@@ -7,6 +11,7 @@ export default async function handler(
 ) {
   if (req.method === "GET") await handleGet(req, res);
   else if (req.method === "DELETE") await handleDelete(req, res);
+  else if (req.method === "PATCH") await handlePatch(req, res);
 }
 
 async function handleGet(
@@ -39,4 +44,45 @@ async function handleDelete(
   });
 
   res.status(200).json({ msg: "Successfully deleted team" });
+}
+
+async function handlePatch(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<void> {
+  const teamId = await getTeamIdFromCookies(req.cookies);
+  const { name, avatar, password } = req.body;
+  if (password) {
+    const { salt } = (await prisma.auth.findFirst({
+      where: {
+        teamId,
+      },
+      select: {
+        salt: true,
+      },
+    })) ?? { salt: "" };
+    if (!salt) {
+      res.status(500).json({ msg: "Team update failed" });
+      return;
+    }
+    const saltedPassword = saltPassword(salt, password);
+    await prisma.auth.update({
+      where: {
+        teamId,
+      },
+      data: {
+        password: saltedPassword,
+      },
+    });
+  }
+  await prisma.team.update({
+    where: {
+      id: teamId,
+    },
+    data: {
+      name,
+      avatar,
+    },
+  });
+  res.status(200).json({ msg: "Successfully updated team" });
 }

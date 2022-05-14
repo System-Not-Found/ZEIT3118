@@ -1,6 +1,7 @@
 import { Grid, Button, Select } from "@mantine/core";
 import { FC, useState } from "react";
-import { success, error, isUnauthorized, warn } from "../../../lib/utils";
+import { API_ENDPOINT } from "../../../lib/constants";
+import { logNetworkCall } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
 const DeleteTeamForm: FC<GlobalSettingsData> = ({ refresh, teamNames }) => {
@@ -13,14 +14,10 @@ const DeleteTeamForm: FC<GlobalSettingsData> = ({ refresh, teamNames }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ teamName: team }),
     });
+    logNetworkCall(response, "Unable to delete team");
     if (response.ok) {
-      success("Successfully deleted team");
       setTeam("");
       refresh();
-    } else if (isUnauthorized(response.status)) {
-      warn("Deleting a team requires admin privileges");
-    } else {
-      error("Unable to delete team");
     }
   };
   return (

@@ -108,7 +108,7 @@ const SignUp: NextPage = () => {
               error={
                 tryRegister && !user.teamName
                   ? "Required"
-                  : !validTeamName(user.teamName)
+                  : user.teamName && !validTeamName(user.teamName)
                   ? "Team name must be longer than 6 characters"
                   : allNames.includes(user.teamName)
                   ? "Team name is taken"

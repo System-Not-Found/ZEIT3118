@@ -1,4 +1,4 @@
-import { Accordion, Grid, TextInput, Button, Text } from "@mantine/core";
+import { Accordion, Grid, TextInput, Button, Text, Paper } from "@mantine/core";
 import { useRouter } from "next/router";
 import { FC, useEffect, useState } from "react";
 import { API_ENDPOINT } from "../../lib/constants";
@@ -108,55 +108,58 @@ const TaskSubmitter: FC<TaskSubmitterProps> = ({ tasks, tournament }) => {
       warn("Please log in before requesting hint");
     }
   };
-
   return (
-    <>
+    <Paper shadow="xs" p="xl">
       <Text>Tasks Todo:</Text>
-      <Accordion>
-        {tasks
-          .filter(
-            (task) => !completeTaskData.taskData.some((t) => t === task.id)
-          )
-          .map((t, idx) => (
-            <Accordion.Item label={t.name} key={idx}>
-              <Grid>
-                <Grid.Col>
-                  <TextInput
-                    label="Task Password"
-                    value={passwordAttempt[t.id]}
-                    onChange={(evt) =>
-                      setPasswordAttempt({
-                        ...passwordAttempt,
-                        [t.id]: evt.target.value,
-                      })
-                    }
-                  ></TextInput>
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <Button
-                    onClick={() =>
-                      handleSubmitTask(t.id, passwordAttempt[t.id])
-                    }
-                  >
-                    Submit
-                  </Button>
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <Button
-                    disabled={completeTaskData.hintData[t.id] !== undefined}
-                    onClick={() => handleGetHint(t.id.toString())}
-                  >
-                    Get Hint?
-                  </Button>
-                </Grid.Col>
-                <Grid.Col span={12}>
-                  <Text>{completeTaskData.hintData[t.id] || ""}</Text>
-                </Grid.Col>
-              </Grid>
-            </Accordion.Item>
-          ))}
-      </Accordion>
-    </>
+      {tasks.length > 0 ? (
+        <Accordion>
+          {tasks
+            .filter(
+              (task) => !completeTaskData.taskData.some((t) => t === task.id)
+            )
+            .map((t, idx) => (
+              <Accordion.Item label={t.name} key={idx}>
+                <Grid>
+                  <Grid.Col>
+                    <TextInput
+                      label="Task Password"
+                      value={passwordAttempt[t.id]}
+                      onChange={(evt) =>
+                        setPasswordAttempt({
+                          ...passwordAttempt,
+                          [t.id]: evt.target.value,
+                        })
+                      }
+                    ></TextInput>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Button
+                      onClick={() =>
+                        handleSubmitTask(t.id, passwordAttempt[t.id])
+                      }
+                    >
+                      Submit
+                    </Button>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Button
+                      disabled={completeTaskData.hintData[t.id] !== undefined}
+                      onClick={() => handleGetHint(t.id.toString())}
+                    >
+                      Get Hint?
+                    </Button>
+                  </Grid.Col>
+                  <Grid.Col span={12}>
+                    <Text>{completeTaskData.hintData[t.id] || ""}</Text>
+                  </Grid.Col>
+                </Grid>
+              </Accordion.Item>
+            ))}
+        </Accordion>
+      ) : (
+        <Text size="sm">No active tasks</Text>
+      )}
+    </Paper>
   );
 };
 

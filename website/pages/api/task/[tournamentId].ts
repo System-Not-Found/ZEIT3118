@@ -59,6 +59,16 @@ async function handlePost(
   });
 
   if (password === pwdRes?.password) {
+    const { id } =
+      (await prisma.tournamentTeam.findFirst({
+        where: {
+          tournamentId,
+          teamId,
+        },
+        select: {
+          id: true,
+        },
+      })) || {};
     await prisma.completedTask.create({
       data: {
         task: {
@@ -68,7 +78,7 @@ async function handlePost(
         },
         tournamentTeam: {
           connect: {
-            tournamentId,
+            id,
           },
         },
       },

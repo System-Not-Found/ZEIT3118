@@ -6,9 +6,10 @@ import { Settings, Logout } from "tabler-icons-react";
 import { API_ENDPOINT } from "../../lib/constants";
 import { error, getAvatarSrc, success } from "../../lib/utils";
 import { useSession } from "../../lib/hooks";
+import Image from "next/image";
 
 const Navigation: FC = () => {
-  const { user, isLoading, isError } = useSession();
+  const { user, isLoading } = useSession();
 
   const handleLogout = async () => {
     const response = await fetch(`${API_ENDPOINT}/logout`, {
@@ -23,27 +24,28 @@ const Navigation: FC = () => {
   };
 
   return (
-    <Container
-      p="md"
-      size="xl"
-      sx={(theme) => ({
-        borderBottom: `2px solid ${theme.colors.gray[2]}`,
+    <div
+      style={{
+        backgroundColor: "#363639",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-      })}
+        padding: 25,
+        paddingRight: 40,
+        marginBottom: 50,
+      }}
     >
       <Link href="/" passHref={true}>
-        <Text size="xl" sx={{ ":hover": { cursor: "pointer" } }}>
-          Cyber Modules
-        </Text>
+        <div style={{ cursor: "pointer" }}>
+          <Image src="/logo.svg" width={250} height={100} />
+        </div>
       </Link>
       {isLoading || user ? (
         <Menu
           trigger="hover"
           control={
             <Avatar
-              src={isLoading ? null : getAvatarSrc(user.avatar)}
+              src={isLoading ? null : getAvatarSrc(user?.avatar ?? 0)}
               radius="lg"
               size="lg"
               sx={{ ":hover": { cursor: "pointer" } }}
@@ -69,7 +71,7 @@ const Navigation: FC = () => {
           </Link>
         </div>
       )}
-    </Container>
+    </div>
   );
 };
 

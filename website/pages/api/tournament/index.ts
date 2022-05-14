@@ -28,10 +28,16 @@ async function handlePost(
     return;
   }
   const { name, endTime } = req.body;
+  const exists = await prisma.tournament.count({ where: { name } });
+  if (exists) {
+    res.status(409).json({ msg: "Tournament name must be unique" });
+    return;
+  }
   await prisma.tournament.create({
     data: {
       name,
       endTime,
     },
   });
+  res.status(200).json({ msg: "Successfully created tournamnet" });
 }

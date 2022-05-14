@@ -10,6 +10,7 @@ import {
   DeleteTeamForm,
   DeleteTournamentForm,
 } from "./";
+import DeleteTournamentTeamForm from "./DeleteTournamentTeamForm";
 
 export interface GlobalSettingsData {
   tournaments: Tournament[];
@@ -59,8 +60,17 @@ const AdminSettings = () => {
         <Text size="xl" weight="bold">
           Tournaments
         </Text>
-        <CreateTournamentForm {...globalSettings} />
-        <AddTournamentTeamForm {...globalSettings} />
+        <Grid gutter="xl">
+          <Grid.Col>
+            <CreateTournamentForm {...globalSettings} />
+          </Grid.Col>
+          <Grid.Col>
+            <AddTournamentTeamForm {...globalSettings} />
+          </Grid.Col>
+          <Grid.Col>
+            <DeleteTournamentTeamForm {...globalSettings} />
+          </Grid.Col>
+        </Grid>
       </SettingsSection>
       <SettingsSection>
         <Text size="xl" weight="bold">
@@ -72,30 +82,31 @@ const AdminSettings = () => {
         </Text>
         <CreateTaskForm {...globalSettings} />
       </SettingsSection>
-      <Paper shadow="md" p="lg">
+      <SettingsSection>
         <Text size="xl" weight="bold">
           Delete
         </Text>
         <Grid align="center" dir="row" gutter="sm">
-          <Grid.Col span={4}>
+          <Grid.Col sm={12} md={4}>
             <DeleteTournamentForm {...globalSettings} />
           </Grid.Col>
-          <Grid.Col span={4}>
+          <Grid.Col sm={12} md={4}>
             <DeleteTaskForm {...globalSettings} />
           </Grid.Col>
-          <Grid.Col span={4}>
+          <Grid.Col sm={12} md={4}>
             <DeleteTeamForm {...globalSettings} />
           </Grid.Col>
         </Grid>
-      </Paper>
+      </SettingsSection>
     </Container>
   );
 };
 
 const SettingsSection: FC = ({ children }) => {
+  console.log(children);
   return (
     <Paper
-      shadow="md"
+      shadow="xs"
       p="lg"
       sx={(theme) => ({ marginBottom: theme.spacing.xl })}
     >

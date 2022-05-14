@@ -11,7 +11,6 @@ export default async function handler(
   const tournamentId = Number.parseInt(req.query["tournamentId"] as string);
   if (req.method === "GET") await handleGet(req, res, tournamentId);
   else if (req.method === "POST") await handlePost(req, res, tournamentId);
-  else if (req.method === "PATCH") await handlePatch(req, res, tournamentId);
   else if (req.method === "DELETE") await handleDelete(req, res, tournamentId);
 }
 
@@ -54,30 +53,6 @@ async function handlePost(
   });
 
   res.status(200).json({ msg: "Successfully created tournament" });
-}
-
-async function handlePatch(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  tournamentId: number
-): Promise<void> {
-  if (!checkAdminPrivileges(req.cookies)) {
-    res.status(401).json({ msg: "Require admin privileges to add team" });
-    return;
-  }
-  const { teamName } = req.body;
-  await prisma.tournamentTeam.create({
-    data: {
-      team: {
-        connect: { name: teamName },
-      },
-      tournament: {
-        connect: { id: tournamentId },
-      },
-    },
-  });
-
-  res.status(200).json({ msg: "Successfully added team to tournament" });
 }
 
 async function handleDelete(

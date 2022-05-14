@@ -1,7 +1,7 @@
 import { Grid, Button, Select } from "@mantine/core";
 import { FC, useState } from "react";
 import { API_ENDPOINT } from "../../../lib/constants";
-import { success, error, isUnauthorized, warn } from "../../../lib/utils";
+import { logNetworkCall } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
 const DeleteTournamentForm: FC<GlobalSettingsData> = ({
@@ -22,14 +22,13 @@ const DeleteTournamentForm: FC<GlobalSettingsData> = ({
         headers: { "Content-Type": "application/json" },
       }
     );
+    logNetworkCall(
+      response,
+      "Unable to delete tournament. Please try again later"
+    );
     if (response.ok) {
-      success("Successfully deleted tournament");
       setTournament({ id: -1, name: "" });
       refresh();
-    } else if (isUnauthorized(response.status)) {
-      warn("Deleting a tournament requires admin privileges");
-    } else {
-      error("Unable to delete tournament");
     }
   };
 

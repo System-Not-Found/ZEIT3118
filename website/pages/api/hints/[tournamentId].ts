@@ -82,13 +82,23 @@ async function handlePost(
     },
   });
 
+  const { id } =
+    (await prisma.tournamentTeam.findFirst({
+      where: {
+        tournamentId,
+        teamId,
+      },
+      select: {
+        id: true,
+      },
+    })) || {};
   await prisma.completedHint.create({
     data: {
       hint: {
         connect: { id: hint?.hintId },
       },
       tournamentTeam: {
-        connect: { tournamentId, teamId },
+        connect: { id },
       },
     },
   });

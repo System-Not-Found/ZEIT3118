@@ -1,9 +1,12 @@
-import useSWR from "swr";
+import useSWR, { Fetcher } from "swr";
 import { API_ENDPOINT } from "./constants";
 import { Tournament, User } from "./types";
 
-export const fetcher = (...args: string[]) =>
-  fetch(...args).then((res) => res.json());
+export const getUser = (endpoint: string) =>
+  fetch(endpoint).then((res) => res.json() as Promise<User>);
+
+export const getTournaments = (endpoint: string) =>
+  fetch(endpoint).then((res) => res.json() as Promise<Tournament[]>);
 
 interface SWRHook {
   isLoading: boolean;
@@ -11,7 +14,7 @@ interface SWRHook {
 }
 
 interface SessionHook extends SWRHook {
-  user: User;
+  user: User | undefined;
 }
 
 interface TournamentsHook extends SWRHook {
@@ -19,7 +22,7 @@ interface TournamentsHook extends SWRHook {
 }
 
 export function useSession(): SessionHook {
-  const { data, error } = useSWR(`${API_ENDPOINT}/session`, fetcher);
+  const { data, error } = useSWR<User>(`${API_ENDPOINT}/session`, getUser);
 
   return {
     user: data,
@@ -29,9 +32,9 @@ export function useSession(): SessionHook {
 }
 
 export function useTournaments(): TournamentsHook {
-  const { data, error } = useSWR(`${API_ENDPOINT}/tournament`, fetcher);
+  const { data, error } = useSWR(`${API_ENDPOINT}/tournament`, getTournaments);
   return {
-    tournaments: data,
+    tournaments: data ?? [],
     isLoading: !error && !data,
     isError: error,
   };

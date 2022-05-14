@@ -1,6 +1,7 @@
 import { Grid, TextInput, Button, Text } from "@mantine/core";
 import { DatePicker, TimeInput } from "@mantine/dates";
 import { FC, useState } from "react";
+import { API_ENDPOINT } from "../../../lib/constants";
 import { Tournament } from "../../../lib/types";
 import {
   warn,
@@ -10,6 +11,7 @@ import {
   convertToTimeString,
   isConflict,
   isUnauthorized,
+  logNetworkCall,
 } from "../../../lib/utils";
 import { GlobalSettingsData } from "./AdminSettings";
 
@@ -36,15 +38,12 @@ const CreateTournamentForm: FC<GlobalSettingsData> = ({ refresh }) => {
       } as Omit<Tournament, "id">),
       credentials: "include",
     });
+    logNetworkCall(
+      response,
+      "Unable to create tournament. Please try again later."
+    );
     if (response.ok) {
-      success("Successfully created tournament!");
       refresh();
-    } else if (isConflict(response.status)) {
-      warn("Tournament with that name already exists");
-    } else if (isUnauthorized(response.status)) {
-      warn("Creating a tournament requires admin privileges");
-    } else {
-      error("Unable to create tournament. Please try again later.");
     }
   };
 

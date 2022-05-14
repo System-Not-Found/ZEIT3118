@@ -1,4 +1,4 @@
-import { useState, useEffect, FC } from "react";
+import { useState, useEffect, FC, ReactNode } from "react";
 import type { NextPage } from "next";
 import { Tournament } from "../lib/types";
 import { Paper, Grid, Text, Container, Skeleton } from "@mantine/core";
@@ -8,6 +8,21 @@ import { useTournaments } from "../lib/hooks";
 
 const Home: NextPage = () => {
   const { tournaments, isLoading } = useTournaments();
+
+  let activeTournaments = [] as ReactNode[];
+  let pastTournaments = [] as ReactNode[];
+  if (!isLoading) {
+    activeTournaments = tournaments
+      .filter(({ endTime }) => endTime && !isInPast(endTime))
+      .map((tournament, idx) => (
+        <TournamentCard key={`active-${idx}`} {...tournament} />
+      ));
+
+    pastTournaments = tournaments
+      .filter(({ endTime }) => endTime && isInPast(endTime))
+      .map((tournament, idx) => <TournamentCard key={idx} {...tournament} />);
+  }
+
   return (
     <Container size="lg">
       {isLoading ? (
@@ -39,29 +54,42 @@ const Home: NextPage = () => {
         </>
       ) : tournaments ? (
         <>
-          <Text size="lg" sx={(theme) => ({ paddingTop: theme.spacing.xl })}>
-            Active Tournaments:
-          </Text>
-          <Grid align="center">
-            {tournaments
-              .filter(({ endTime }) => endTime && !isInPast(endTime))
-              .map((tournament, idx) => (
-                <TournamentCard key={`active-${idx}`} {...tournament} />
-              ))}
-          </Grid>
-          <Text size="lg" sx={(theme) => ({ paddingTop: theme.spacing.xl })}>
-            Past Tournaments:
-          </Text>
-          <Grid align="center">
-            {tournaments
-              .filter(({ endTime }) => endTime && isInPast(endTime))
-              .map((tournament, idx) => (
-                <TournamentCard key={idx} {...tournament} />
-              ))}
-          </Grid>
+          {activeTournaments.length > 0 ? (
+            <>
+              <Text
+                size="lg"
+                sx={(theme) => ({
+                  paddingBottom: theme.spacing.lg,
+                })}
+              >
+                Active Tournaments:
+              </Text>
+              <Grid align="center">{activeTournaments}</Grid>{" "}
+            </>
+          ) : (
+            <></>
+          )}
+          {pastTournaments.length > 0 ? (
+            <>
+              <Text
+                size="lg"
+                sx={(theme) => ({
+                  paddingBottom: theme.spacing.lg,
+                  paddingTop: activeTournaments.length > 0 ? "75px" : 0,
+                })}
+              >
+                Past Tournaments:
+              </Text>
+              <Grid align="center">{pastTournaments}</Grid>{" "}
+            </>
+          ) : (
+            <></>
+          )}
         </>
       ) : (
-        <Text size="md">There are no active tournaments</Text>
+        <Paper shadow="sm">
+          <Text size="md">There are no tournaments</Text>
+        </Paper>
       )}
     </Container>
   );
@@ -72,7 +100,7 @@ const TournamentCard: FC<Tournament> = ({ id, name, endTime }) => {
     <Grid.Col span={6}>
       <Link href={`/tournament/${id}`} passHref={true}>
         <Paper
-          shadow="md"
+          shadow="xs"
           p="lg"
           sx={(theme) => ({
             ":hover": {

@@ -31,7 +31,36 @@ export const error = (message: string, silent = false): void => {
     });
   }
 };
+
+export const logNetworkCall = async (response: Response, err: string) => {
+  if (isInternalServerError(response.status)) {
+    error(err);
+  } else if (isNoContent(response.status)) {
+    return;
+  }
+  const msg = (await response.json()).msg;
+  if (isSuccess(response.status)) {
+    success(msg);
+  } else if (
+    isConflict(response.status) ||
+    isNotFound(response.status) ||
+    isUnmodified(response.status)
+  ) {
+    warn(msg);
+  } else if (isInternalServerError(response.status)) {
+    error(err);
+  } else if (isNoContent(response.status)) {
+    return;
+  } else {
+    error("An unexpected error occured...");
+  }
+};
 // Status Codes
+
+export const isSuccess = (status: number) => {
+  return status == 200;
+};
+
 export const isUnauthorized = (status: number) => {
   return status === 401;
 };
@@ -50,6 +79,10 @@ export const isUnmodified = (status: number) => {
 
 export const isNoContent = (status: number) => {
   return status == 204;
+};
+
+export const isInternalServerError = (status: number) => {
+  return status == 500;
 };
 
 interface Time {

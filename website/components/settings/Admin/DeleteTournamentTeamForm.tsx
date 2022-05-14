@@ -5,7 +5,7 @@ import { warn, logNetworkCall } from "../../../lib/utils";
 import { API_ENDPOINT } from "../../../lib/constants";
 import { GlobalSettingsData } from "./AdminSettings";
 
-const AddTournamentTeamForm: FC<GlobalSettingsData> = ({
+const DeleteTournamentTeamForm: FC<GlobalSettingsData> = ({
   tournaments,
   teamNames,
 }) => {
@@ -24,7 +24,7 @@ const AddTournamentTeamForm: FC<GlobalSettingsData> = ({
         credentials: "include",
       });
       if (response.ok) {
-        const teams = (await response.json()) as Team[];
+        const teams = await response.json();
         setTournamentTeams(teams);
       } else {
         setTournamentTeams([]);
@@ -33,28 +33,31 @@ const AddTournamentTeamForm: FC<GlobalSettingsData> = ({
     getTournamentTeams();
   }, [tournament]);
 
-  const addTeamToTournament = async () => {
+  const deleteTeamFromTournament = async () => {
     if (tournament.id === -1) {
-      warn("Cannot add a team to an empty tournament.");
+      warn("Cannot delete a team from an empty tournament.");
       return;
     }
     if (team === "") {
-      warn("Cannot add an empty team to a tournament.");
+      warn("Cannot delete an empty team from a tournament.");
       return;
     }
     const response = await fetch(`${API_ENDPOINT}/teams/${tournament.id}`, {
-      method: "POST",
+      method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ teamName: team }),
       credentials: "include",
     });
-    logNetworkCall(response, `Unable to add ${team} to tournament`);
+    if (response.ok) {
+      setTeam("");
+    }
+    await logNetworkCall(response, "Unable to delete team from tournament");
   };
 
   return (
     <Grid gutter="sm">
       <Grid.Col>
-        <Text size="lg">Add Team to Tournament</Text>
+        <Text size="lg">Delete Team from Tournament</Text>
       </Grid.Col>
       <Grid.Col>
         <Select
@@ -73,12 +76,12 @@ const AddTournamentTeamForm: FC<GlobalSettingsData> = ({
       </Grid.Col>
       <Grid.Col>
         <Select
-          label="Choose team to add to tournament"
-          placeholder="New Team"
-          data={teamNames
-            .filter((name) => name !== "Admin")
-            .filter((name) => !tournamentTeams.find((t) => t.name === name))
-            .map((name) => ({ value: name, label: name }))}
+          label="Choose team to delete from tournament"
+          placeholder="Delete Team"
+          data={tournamentTeams
+            .filter(({ name }) => name !== "Admin")
+            .filter(({ name }) => tournamentTeams.find((t) => t.name === name))
+            .map(({ name }) => ({ value: name, label: name }))}
           value={team}
           onChange={(evt) => setTeam(evt ?? "")}
           required
@@ -87,13 +90,13 @@ const AddTournamentTeamForm: FC<GlobalSettingsData> = ({
       <Grid.Col>
         <Button
           disabled={team === "" || tournament.name === ""}
-          onClick={() => addTeamToTournament()}
+          onClick={() => deleteTeamFromTournament()}
         >
-          Add Team
+          Delete Team
         </Button>
       </Grid.Col>
     </Grid>
   );
 };
 
-export default AddTournamentTeamForm;
+export default DeleteTournamentTeamForm;
