@@ -1,31 +1,21 @@
 import type { AppProps } from "next/app";
-import { createContext, useState } from "react";
-import { Team } from "../lib/types";
+import Navigation from "../components/shared/Navigation";
+import { NotificationsProvider } from "@mantine/notifications";
+import Head from "next/head";
+import "../styles/globals.css";
 
-interface UserContextProps {
-  user: Team;
-  toggleUser: (user: Team) => void;
-}
-
-const emptyUser: Team = {
-  id: 0,
-  teamName: "",
-  password: "",
-  points: 0,
-  wins: 0,
-  admin: false,
-};
-export const UserContext = createContext<UserContextProps>({
-  user: emptyUser,
-  toggleUser: () => {},
-});
-
-function MyApp({ Component, pageProps }: AppProps) {
-  const [user, setUser] = useState<Team>(emptyUser);
+function MyApp({ Component, pageProps, ...appProps }: AppProps) {
   return (
-    <UserContext.Provider value={{ user, toggleUser: setUser }}>
-      <Component {...pageProps} />
-    </UserContext.Provider>
+    <>
+      <Head>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <NotificationsProvider>
+        <Navigation />
+        <Component {...pageProps} />
+        <div style={{ height: "100px" }} />
+      </NotificationsProvider>
+    </>
   );
 }
 

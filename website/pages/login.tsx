@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Card,
   TextInput,
@@ -9,14 +9,20 @@ import {
   Grid,
   Button,
 } from "@mantine/core";
-import { FiUsers as TeamIcon, FiLock as LockIcon } from "react-icons/fi";
+import { Users, Lock } from "tabler-icons-react";
+import {
+  sha256,
+  isNotFound,
+  isUnauthorized,
+  success,
+  error,
+} from "../lib/utils";
+import Link from "next/link";
 
 interface LoginData {
   teamName: string;
   password: string;
 }
-
-const handleAuthentication = (loginData: LoginData) => {};
 
 const LoginPage: NextPage = () => {
   const [loginData, setLoginData] = useState<LoginData>({
@@ -24,9 +30,27 @@ const LoginPage: NextPage = () => {
     password: "",
   });
 
+  const handleAuthenticate = async (loginData: LoginData) => {
+    const password = sha256(loginData.password);
+    const response = await fetch("/api/login", {
+      body: JSON.stringify({ ...loginData, password }),
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    if (response.ok) {
+      success("Successfully logged in");
+      window.location.replace("/");
+    } else if (isUnauthorized(response.status) || isNotFound(response.status)) {
+      error("Invalid username and password combination");
+    }
+  };
+
   return (
-    <Container size="xs">
-      <Card>
+    <Container size="sm">
+      <Card shadow="lg" p="xl">
         <Grid align="center" justify="space-between">
           <Grid.Col>
             <Text>Login</Text>
@@ -39,7 +63,7 @@ const LoginPage: NextPage = () => {
               onChange={(evt) =>
                 setLoginData({ ...loginData, teamName: evt.target.value })
               }
-              icon={<TeamIcon />}
+              icon={<Users />}
               radius="md"
               required={true}
             />
@@ -52,15 +76,28 @@ const LoginPage: NextPage = () => {
               onChange={(evt) =>
                 setLoginData({ ...loginData, password: evt.target.value })
               }
-              icon={<LockIcon />}
+              icon={<Lock />}
               radius="md"
               required={true}
             />
           </Grid.Col>
-          <Grid.Col span={10}>
-            <Button onClick={() => handleAuthentication(loginData)}>
-              Login
-            </Button>
+          <Grid.Col span={6}>
+            <Button onClick={() => handleAuthenticate(loginData)}>Login</Button>
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Link href="/signup" passHref={true}>
+              <Text
+                size="sm"
+                sx={{
+                  "&:hover": {
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  },
+                }}
+              >
+                Do not have an account? Sign up
+              </Text>
+            </Link>
           </Grid.Col>
         </Grid>
       </Card>
