@@ -1,42 +1,20 @@
 services:
   db:
-    image: mysql
+    image: mysql/mysql-server
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
-    networks:
-      - backend
     volumes:
-      - db_data:$HOME/ZEIT3118_db/
+      - db_data:/var/lib/mysql
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=admin
       - MYSQL_DATABASE=scoreboard
       - MYSQL_ROOT_HOST=%
 
-  api:
-    build: backend/
+  website:
+    image: website:final
     ports:
-      - "3001:3001"
-    restart: on-failure:10
-    networks:
-      - frontend
-      - backend
-    depends_on:
-      - "db"
-
-# DATABASE_LOCATION=/c/Users/seanh/Documents/ZEIT3118/database
-
-# website:
-#   build: ./website/
-#   ports:
-#     - "8080:8080"
-#   networks:
-#     - frontend
-
+      - "80:80"
 volumes:
-  db_data: {}
-
-networks:
-  frontend: {}
-  backend: {}
+  db_data:

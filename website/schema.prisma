@@ -1,0 +1,84 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["linux-arm64-openssl-1.1.x"]
+}
+
+model Team {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  avatar         Int              @default(0)
+  wins           Int              @default(0)
+  auth           Auth?
+  cookie         Cookie?
+  tournamentTeam TournamentTeam[]
+}
+
+model Auth {
+  id       Int     @id @default(autoincrement())
+  team     Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId   Int     @unique
+  password String
+  salt     String  @unique
+  admin    Boolean @default(false)
+}
+
+model Tournament {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  endTime        String
+  TournamentTeam TournamentTeam[]
+}
+
+model TournamentTeam {
+  id            Int             @id @default(autoincrement())
+  team          Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId        Int
+  tournament    Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId  Int
+  completedTask CompletedTask[]
+  completedHint CompletedHint[]
+}
+
+model CompletedTask {
+  id               Int            @id @default(autoincrement())
+  tournamentTeam   TournamentTeam @relation(fields: [tournamentTeamId], references: [id], onDelete: Cascade)
+  tournamentTeamId Int
+  task             Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId           Int
+}
+
+model CompletedHint {
+  id               Int            @id @default(autoincrement())
+  tournamentTeam   TournamentTeam @relation(fields: [tournamentTeamId], references: [id], onDelete: Cascade)
+  tournamentTeamId Int
+  hint             Hint           @relation(fields: [hintId], references: [id], onDelete: Cascade)
+  hintId           Int
+}
+
+model Task {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  points        Int             @default(0)
+  password      String
+  hint          Hint            @relation(fields: [hintId], references: [id])
+  hintId        Int             @unique
+  CompletedTask CompletedTask[]
+}
+
+model Hint {
+  id            Int             @id @default(autoincrement())
+  value         String          @default("")
+  task          Task[]
+  CompletedHint CompletedHint[]
+}
+
+model Cookie {
+  cookie String @id @unique
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId Int
+}
